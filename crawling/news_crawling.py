@@ -1,8 +1,11 @@
-from bs4 import BeautifulSoup
-import requests
-import pandas as pd
-from db.db_news import get_connection, create_new_news, get_all_news
+"""
+네이버 뉴스에서 특정 키워드로 뉴스를 크롤링하여 데이터베이스에 저장하는 스크립트입니다.
+"""
 
+import requests
+from bs4 import BeautifulSoup
+
+from db.db_news import create_new_news, get_connection
 
 header = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
