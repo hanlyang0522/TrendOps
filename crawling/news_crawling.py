@@ -2,20 +2,26 @@
 네이버 뉴스에서 특정 키워드로 뉴스를 크롤링하여 데이터베이스에 저장하는 스크립트입니다.
 """
 
+from typing import Any, Dict
+
 import requests
 from bs4 import BeautifulSoup
 
 from db.db_news import create_new_news, get_connection
 
 header = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/58.0.3029.110 Safari/537.3"
+    )
 }
 
 # search = input("Enter search term: ")
 search = "당근마켓"
 url = "https://search.naver.com/search.naver?"
 
-params = {
+params: Dict[str, Any] = {
     "where": "news",
     "query": search,
     "start": 0,
@@ -24,7 +30,7 @@ params = {
 
 
 if __name__ == "__main__":
-    re_url = requests.get(url=url, headers=header, params=params)
+    re_url = requests.get(url=url, headers=header, params=params, timeout=5)
     html = BeautifulSoup(re_url.text, "html.parser")
 
     articles = html.select('a[data-heatmap-target=".nav"]')

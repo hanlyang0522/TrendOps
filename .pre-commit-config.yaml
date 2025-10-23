@@ -29,6 +29,9 @@ repos:
     -   id: flake8
         files: \.py$
         additional_dependencies: [flake8-bugbear]
+        args:
+        - --max-line-length=88
+        - --extend-ignore=E203,W503
 
 -   repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.11.0

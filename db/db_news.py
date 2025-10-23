@@ -42,7 +42,7 @@ def setup_database():
             conn.close()
 
 
-def create_new_news(title, url):
+def create_new_news(title: str, url: str):
     """
     Create new news in database
     """
@@ -69,7 +69,7 @@ def create_new_news(title, url):
             conn.close()
 
 
-def get_news(news_id):
+def get_news(news_id: int):
     """
     Retrieve news information by ID
     """
@@ -122,7 +122,7 @@ def get_all_news():
             conn.close()
 
 
-def update_news_url(title, new_url):
+def update_news_url(title: str, new_url: str):
     """
     Update news's URL by title
     """

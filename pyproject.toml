@@ -8,7 +8,7 @@ line_length = 88
 
 [tool.flake8]
 max-line-length = 88
-extend-ignore = "E203, W503" # black과 충돌하는 flake8 규칙 무시
+extend-ignore = "E203, W503, E501" # black과 충돌하는 flake8 규칙 무시
 
 [tool.mypy]
 python_version = "3.13"
