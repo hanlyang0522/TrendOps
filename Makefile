@@ -28,7 +28,7 @@ logs: ## Show logs for all services
 logs-crawler: ## Show crawler logs
 	docker-compose logs -f crawler
 
-logs-postgres: ## Show postgres logs  
+logs-postgres: ## Show postgres logs
 	docker-compose logs -f postgres
 
 clean: ## Remove all containers, volumes, and images
@@ -65,7 +65,7 @@ dev-build: ## Build for development
 dev-up: ## Start development environment
 	docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
 
-# Production commands  
+# Production commands
 prod-build: ## Build for production
 	docker-compose -f docker-compose.yml -f docker-compose.prod.yml build
 

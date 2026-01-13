@@ -1,6 +1,6 @@
 version: '3.8'
 
-# 프로덕션 환경용 override 파일  
+# 프로덕션 환경용 override 파일
 # Usage: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
 
 services:
