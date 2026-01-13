@@ -1,3 +1,37 @@
 *.csv
 *.html
 __pycache__/
+
+# Environment files (민감한 정보 포함)
+.env
+.env.*
+!.env.example
+!.env.template
+
+# Docker
+.env.local
+.env.production
+
+# Logs
+logs/
+*.log
+
+# Database backups
+*.sql
+backup_*.sql
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# Docker volumes
+postgres_data/

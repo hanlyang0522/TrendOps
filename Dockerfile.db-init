@@ -1,0 +1,30 @@
+FROM python:3.13-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements
+COPY requirements.yaml ./
+COPY pyproject.toml ./
+
+# Install Python dependencies
+RUN pip install --no-cache-dir psycopg2-binary
+
+# Copy source code
+COPY db/ ./db/
+
+# Create logs directory
+RUN mkdir -p logs
+
+# Set environment variables
+ENV PYTHONPATH=/app
+
+# Create init script
+COPY scripts/wait-for-postgres.sh ./
+RUN chmod +x wait-for-postgres.sh
+
+CMD ["./wait-for-postgres.sh", "postgres", "python", "-c", "from db.db_news import setup_database; setup_database()"]

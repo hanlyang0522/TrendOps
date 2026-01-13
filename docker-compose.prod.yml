@@ -1,0 +1,42 @@
+version: '3.8'
+
+# 프로덕션 환경용 override 파일  
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
+
+services:
+  postgres:
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: md5  # 보안 강화
+    volumes:
+      - /var/lib/postgresql/data:/var/lib/postgresql/data  # 프로덕션 볼륨
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "0.5"
+
+  crawler:
+    environment:
+      LOG_LEVEL: INFO
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.25"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  scheduler:
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.1"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
