@@ -2,6 +2,7 @@
 네이버 뉴스에서 특정 키워드로 뉴스를 크롤링하여 데이터베이스에 저장하는 스크립트입니다.
 """
 
+import os
 from typing import Any, Dict
 
 import requests
@@ -18,7 +19,7 @@ header = {
 }
 
 # search = input("Enter search term: ")
-search = "당근마켓"
+search = os.getenv("SEARCH_KEYWORD", "당근마켓")
 url = "https://search.naver.com/search.naver?"
 
 params: Dict[str, Any] = {

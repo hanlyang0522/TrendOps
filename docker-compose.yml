@@ -1,0 +1,93 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: trendops-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_HOST_AUTH_METHOD: ${POSTGRES_HOST_AUTH_METHOD:-md5}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - trendops-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  db-init:
+    build:
+      context: .
+      dockerfile: Dockerfile.db-init
+    container_name: trendops-db-init
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+    networks:
+      - trendops-network
+    restart: "no"
+
+  crawler:
+    build:
+      context: .
+      dockerfile: Dockerfile.crawler
+    container_name: trendops-crawler
+    depends_on:
+      - db-init
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      SEARCH_KEYWORD: ${SEARCH_KEYWORD:-당근마켓}
+      MAX_ARTICLES: ${MAX_ARTICLES:-50}
+    networks:
+      - trendops-network
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile.scheduler
+    container_name: trendops-scheduler
+    depends_on:
+      - postgres
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      CRAWL_SCHEDULE: ${CRAWL_SCHEDULE:-0 9 * * *}
+      SEARCH_KEYWORD: ${SEARCH_KEYWORD:-당근마켓}
+      RUN_ON_START: ${RUN_ON_START:-false}
+    networks:
+      - trendops-network
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  trendops-network:
+    driver: bridge

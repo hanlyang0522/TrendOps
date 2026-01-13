@@ -1,0 +1,30 @@
+version: '3.8'
+
+# 개발 환경용 override 파일
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  postgres:
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust  # 개발용으로만 trust 사용
+      POSTGRES_PASSWORD: dev_password   # 개발용 기본 패스워드
+    ports:
+      - "5433:5432"  # 로컬 PostgreSQL과 충돌 방지
+
+  db-init:
+    environment:
+      POSTGRES_PASSWORD: dev_password
+
+  crawler:
+    environment:
+      POSTGRES_PASSWORD: dev_password
+      LOG_LEVEL: DEBUG
+      RUN_ON_START: "true"  # 개발 시 즉시 실행
+    volumes:
+      - .:/app  # 개발 시 소스 코드 실시간 마운트
+
+  scheduler:
+    environment:
+      POSTGRES_PASSWORD: dev_password
+      RUN_ON_START: "true"
+      CRAWL_SCHEDULE: "*/5 * * * *"  # 5분마다 실행 (개발용)

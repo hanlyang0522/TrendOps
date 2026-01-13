@@ -2,13 +2,36 @@ name: CI (Simplified)
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, dev ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main, develop, dev ]
 
 jobs:
   quality-check:
     runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: test_db
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      POSTGRES_HOST: localhost
+      POSTGRES_DB: test_db
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+      POSTGRES_PORT: 5432
 
     steps:
     - name: Checkout code
@@ -44,6 +67,12 @@ jobs:
       run: |
         conda activate TrendOps
         pre-commit run --all-files
+
+    - name: Test database connection
+      shell: bash -l {0}
+      run: |
+        conda activate TrendOps
+        python -c "from db.db_news import get_connection; print('Database connection successful')"
 
     - name: Check Python syntax
       shell: bash -l {0}

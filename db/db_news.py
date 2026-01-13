@@ -1,13 +1,38 @@
+import os
+
 import psycopg2
 
 
 def get_connection():
     """
     DB 연결을 생성
+    환경 변수에서 데이터베이스 연결 정보를 읽어옵니다.
     """
-    return psycopg2.connect(
-        host="localhost", database="postgres", user="postgres", password="pg1234"
-    )
+    # 필수 환경 변수 검증
+    required_vars = [
+        "POSTGRES_HOST",
+        "POSTGRES_DB",
+        "POSTGRES_USER",
+        "POSTGRES_PASSWORD",
+    ]
+    missing_vars = [var for var in required_vars if not os.getenv(var)]
+
+    if missing_vars:
+        missing = ", ".join(missing_vars)
+        raise ValueError(f"Missing required environment variables: {missing}")
+
+    try:
+        return psycopg2.connect(
+            host=os.getenv("POSTGRES_HOST"),
+            database=os.getenv("POSTGRES_DB"),
+            user=os.getenv("POSTGRES_USER"),
+            password=os.getenv("POSTGRES_PASSWORD"),
+            port=int(os.getenv("POSTGRES_PORT", "5432")),
+            connect_timeout=10,  # 연결 타임아웃 설정
+            sslmode=os.getenv("POSTGRES_SSLMODE", "prefer"),  # SSL 모드 설정
+        )
+    except psycopg2.Error as e:
+        raise ConnectionError(f"Database connection failed: {e}") from e
 
 
 def setup_database():
@@ -52,7 +77,8 @@ def create_new_news(title: str, url: str):
         cur = conn.cursor()
 
         sql = (
-            "INSERT INTO danggn_market_urls (title, url) VALUES (%s, %s) RETURNING id;"
+            "INSERT INTO danggn_market_urls (title, url) "
+            "VALUES (%s, %s) RETURNING id;"
         )
         cur.execute(sql, (title, url))
 
