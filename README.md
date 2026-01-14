@@ -1,5 +1,160 @@
 # TrendOps: LLM 기반 산업 트렌드 요약 서비스
 
+## 🚀 Quick Start (Docker)
+
+### 전체 시스템 실행
+```bash
+# 1. 모든 서비스 빌드 및 실행
+make build && make up
+
+# 또는 직접 docker-compose 사용
+docker-compose up -d
+
+# 2. 로그 확인
+make logs
+
+# 3. 크롤링 테스트 (한 번만 실행)
+make test
+```
+
+### 개별 서비스 관리
+```bash
+# PostgreSQL만 시작
+docker-compose up postgres -d
+
+# 크롤러만 실행 (일회성)
+docker-compose run --rm crawler
+
+# 스케줄러 시작 (주기적 실행)
+docker-compose up scheduler -d
+
+# 서비스 상태 확인
+make status
+```
+
+## 📋 서비스 구성
+
+- **PostgreSQL**: 뉴스 데이터 저장소 (포트: 5432)
+- **DB Init**: 데이터베이스 초기 설정
+- **Crawler**: 뉴스 크롤링 서비스
+- **Scheduler**: 주기적 크롤링 실행 (매일 09:00)
+
+## 🛠️ 환경 설정
+
+### 환경 변수 (`.env` 파일)
+```bash
+# Database
+POSTGRES_HOST=postgres
+POSTGRES_DB=postgres
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=pg1234
+
+# Crawler
+SEARCH_KEYWORD=당근마켓
+CRAWL_SCHEDULE=09:00
+
+# Scheduler
+RUN_ON_START=true  # 시작 시 즉시 실행
+```
+
+## 🧪 개발 및 테스트
+
+### 로컬 개발
+```bash
+# 개발용 컨테이너 접속
+make shell-crawler
+
+# PostgreSQL 접속
+make shell-postgres
+
+# 데이터베이스 백업
+make backup-db
+```
+
+### 로그 확인
+```bash
+# 전체 로그
+make logs
+
+# 크롤러 로그만
+make logs-crawler
+
+# 실시간 로그 확인
+docker-compose logs -f
+```
+
+## 📊 데이터베이스 스키마
+
+### `danggn_market_urls` 테이블
+```sql
+CREATE TABLE danggn_market_urls (
+    id SERIAL PRIMARY KEY,
+    title TEXT,
+    url VARCHAR(500) NOT NULL
+);
+```
+
+## 🔧 문제 해결
+
+### 서비스 재시작
+```bash
+make restart
+```
+
+### 전체 초기화
+```bash
+make clean  # 주의: 모든 데이터가 삭제됩니다
+make build
+make up
+```
+
+### 개별 서비스 디버깅
+```bash
+# 크롤러 컨테이너 내부 접속
+docker-compose exec crawler /bin/bash
+
+# 한 번만 크롤링 실행
+docker-compose run --rm crawler python -m crawling.news_crawling
+```
+
+## 🔒 보안 설정
+
+### 첫 번째 설정 (필수!)
+
+```bash
+# 1. 환경 변수 파일 생성
+cp .env.example .env
+
+# 2. .env 파일에서 보안 정보 수정
+# POSTGRES_PASSWORD를 강력한 패스워드로 변경하세요!
+nano .env  # 또는 선호하는 에디터 사용
+```
+
+### 환경별 실행
+
+**개발 환경:**
+```bash
+# 개발용 설정으로 실행
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+```
+
+**프로덕션 환경:**
+```bash
+# 프로덕션용 설정으로 실행
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+```
+
+### 보안 체크리스트
+
+- [ ] `.env` 파일에서 기본 패스워드 변경
+- [ ] 프로덕션에서는 SSL/TLS 연결 사용
+- [ ] 정기적인 보안 업데이트 적용
+- [ ] 로그 모니터링 설정
+
+자세한 내용은 [SECURITY.md](./SECURITY.md)를 참고하세요.
+
+---
+
 ## Intro.
 - 개요: 국내 주요 기업의 산업 트렌드를 분석하여 제공하는 서비스
 - 배경: 취준하면서 자소서 쓸때 기업 산업트렌드 분석을 반복하며 관련 서비스가 있으면 좋겠다고 느낌

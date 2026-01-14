@@ -1,10 +1,11 @@
-name: CI
+name: CI (Full)
 
 on:
-  push:
-    branches: [ main, develop, 'feature/**' ]
-  pull_request:
-    branches: [ main, develop ]
+  workflow_dispatch:  # 수동 실행만 가능
+  # push:
+  #   branches: [ main, develop ]
+  # pull_request:
+  #   branches: [ main, develop ]
 
 jobs:
   lint-and-test:
@@ -24,7 +25,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Cache pip dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('requirements.yaml') }}
@@ -51,7 +52,7 @@ jobs:
         pip install pre-commit
 
     - name: Cache pre-commit hooks
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.cache/pre-commit
         key: ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
