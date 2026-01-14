@@ -418,7 +418,7 @@ from bs4 import BeautifulSoup
 
 # Local
 from db.db_news import get_connection
-from crawling.crawler import fetch_articles
+from crawling.news_crawling import fetch_articles
 ```
 
 #### File Naming
@@ -871,7 +871,7 @@ When Copilot generates code for this project, it should:
 2. **Use modern Python 3.13 syntax**
    - Native type hints: `dict[str, int]`, `list[str]`
    - Use `match`/`case` for complex conditionals (Python 3.10+)
-   - Use `Self` from `typing` module for return types (available since Python 3.11)
+   - Use modern type annotations and features available in Python 3.13
 
 3. **Add comprehensive docstrings**
    - Google-style docstrings for all public functions and classes
