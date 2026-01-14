@@ -8,14 +8,17 @@ from bs4 import BeautifulSoup
 from db.db_news import create_new_news, get_connection
 
 header = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+    )
 }
 
 # search = input("Enter search term: ")
 search = "당근마켓"
 url = "https://search.naver.com/search.naver?"
 
-params = {
+params: dict[str, str | int] = {
     "where": "news",
     "query": search,
     "start": 0,
