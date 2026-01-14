@@ -528,13 +528,7 @@ git checkout -b fix/crawler-timeout
 
 # 2. Fix the issue
 git add crawling/news_crawling.py
-git commit -m "fix(crawler): increase request timeout to 30s
-
-The crawler was timing out on slow news sites. Increased
-timeout from 10s to 30s and added retry logic with exponential
-backoff.
-
-Closes #42"
+git commit -m "fix(crawler): increase request timeout to 30s" -m "The crawler was timing out on slow news sites. Increased timeout from 10s to 30s and added retry logic with exponential backoff." -m "Closes #42"
 
 git add tests/test_crawler.py
 git commit -m "test(crawler): add timeout test case"
@@ -560,13 +554,7 @@ git checkout -b hotfix/database-connection-error
 
 # 2. Fix the critical issue
 git add db/db_news.py
-git commit -m "hotfix(db): fix connection pool exhaustion
-
-Connection pool was not properly releasing connections,
-causing exhaustion under load. Added explicit connection
-cleanup in finally blocks.
-
-Closes #78"
+git commit -m "hotfix(db): fix connection pool exhaustion" -m "Connection pool was not properly releasing connections, causing exhaustion under load. Added explicit connection cleanup in finally blocks." -m "Closes #78"
 
 # 3. Push and create TWO PRs
 git push origin hotfix/database-connection-error
@@ -593,10 +581,7 @@ git checkout -b refactor/database-connection
 
 # 2. Refactor code
 git add db/db_news.py db/connection_pool.py
-git commit -m "refactor(db): extract connection pool to separate module
-
-Moved connection pool logic to dedicated module for better
-maintainability and reusability. No functional changes."
+git commit -m "refactor(db): extract connection pool to separate module" -m "Moved connection pool logic to dedicated module for better maintainability and reusability. No functional changes."
 
 git add tests/test_db_connection.py
 git commit -m "test(db): update tests for refactored connection module"
@@ -622,10 +607,7 @@ git checkout -b docs/docker-setup-guide
 
 # 2. Update documentation
 git add README.md
-git commit -m "docs: update Docker setup instructions
-
-Added detailed steps for Docker installation, environment
-variable configuration, and common troubleshooting tips."
+git commit -m "docs: update Docker setup instructions" -m "Added detailed steps for Docker installation, environment variable configuration, and common troubleshooting tips."
 
 git add SECURITY.md
 git commit -m "docs: add Docker security best practices"
