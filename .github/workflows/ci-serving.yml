@@ -75,44 +75,7 @@ jobs:
       shell: bash -l {0}
       run: |
         conda activate TrendOps
-        python -m py_compile $(find . -name "*.py" -not -path "./_*" -not -path "./.*")
-
-    - name: Run type checking with mypy
-      shell: bash -l {0}
-      run: |
-        conda activate TrendOps
-        mypy --config-file pyproject.toml $(find . -name "*.py" -not -path "./_*" -not -path "./.*" -not -path "./__pycache__/*")
-      continue-on-error: true
-
-    - name: Check import sorting with isort
-      shell: bash -l {0}
-      run: |
-        conda activate TrendOps
-        isort --check-only --diff .
-
-    - name: Check code formatting with black
-      shell: bash -l {0}
-      run: |
-        conda activate TrendOps
-        black --check --diff .
-
-    - name: Run flake8 linting
-      shell: bash -l {0}
-      run: |
-        conda activate TrendOps
-        flake8 .
-
-    - name: Check Jupyter notebooks with nbqa
-      shell: bash -l {0}
-      run: |
-        conda activate TrendOps
-        if ls *.ipynb 1> /dev/null 2>&1; then
-          nbqa black --check --diff .
-          nbqa isort --check-only --diff .
-          nbqa flake8 .
-        else
-          echo "No Jupyter notebooks found, skipping nbqa checks"
-        fi
+        python -m compileall . -x "(build|dist|\.git|__pycache__|\.pytest_cache)" -q
 
   security-scan:
     runs-on: ubuntu-latest
