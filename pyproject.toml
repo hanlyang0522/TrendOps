@@ -6,21 +6,17 @@ target-version = ['py313']
 profile = "black"
 line_length = 88
 
-[tool.flake8]
-max-line-length = 88
-extend-ignore = "E203, W503, E501" # black과 충돌하는 flake8 규칙 무시
-
 [tool.mypy]
 python_version = "3.13"
 warn_return_any = true
 warn_unused_configs = true
+ignore_missing_imports = true
 
 [tool.nbqa.config]
 black = "pyproject.toml"
 isort = "pyproject.toml"
-flake8 = "pyproject.toml"
+flake8 = ".flake8"
 
 # Pylint는 .pylintrc 파일을 따로 사용하거나 여기에 설정할 수 있습니다.
 # [tool.pylint.master]
 # max-line-length = 88
-
