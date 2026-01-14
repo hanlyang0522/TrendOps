@@ -140,7 +140,7 @@ docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 
 **프로덕션 환경:**
 ```bash
-# 프로덕션용 설정으로 실행  
+# 프로덕션용 설정으로 실행
 docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 ```
 

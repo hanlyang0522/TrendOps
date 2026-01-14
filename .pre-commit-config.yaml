@@ -28,7 +28,6 @@ repos:
     hooks:
     -   id: flake8
         files: \.py$
-        args: ["--max-line-length=88", "--extend-ignore=E203,W503"]
         additional_dependencies: [flake8-bugbear]
         args:
         - --max-line-length=88
