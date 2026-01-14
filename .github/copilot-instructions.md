@@ -871,7 +871,7 @@ When Copilot generates code for this project, it should:
 2. **Use modern Python 3.13 syntax**
    - Native type hints: `dict[str, int]`, `list[str]`
    - Use `match`/`case` for complex conditionals (Python 3.10+)
-   - Use `typing.Self` for return types (Python 3.11+)
+   - Use `Self` from `typing` module for return types (available since Python 3.11)
 
 3. **Add comprehensive docstrings**
    - Google-style docstrings for all public functions and classes
