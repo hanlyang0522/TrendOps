@@ -2,14 +2,14 @@ name: CI (Simplified)
 
 on:
   push:
-    branches: [ main, develop, dev ]
+    branches: [ main, develop, 'feature/**' ]
   pull_request:
-    branches: [ main, develop, dev ]
+    branches: [ main, develop ]
 
 jobs:
   quality-check:
     runs-on: ubuntu-latest
-    
+
     services:
       postgres:
         image: postgres:15
