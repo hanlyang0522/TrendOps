@@ -1,6 +1,6 @@
 # TrendOps: LLM 기반 산업 트렌드 요약 서비스
 
-> 📖 **프로젝트 분석 및 개발 가이드**: [docs/QUICK_START_GUIDE.md](docs/QUICK_START_GUIDE.md)  
+> 📖 **프로젝트 분석 및 개발 가이드**: [docs/QUICK_START_GUIDE.md](docs/QUICK_START_GUIDE.md)
 > 📊 **상세 로드맵**: [docs/PROJECT_ANALYSIS_AND_ROADMAP.md](docs/PROJECT_ANALYSIS_AND_ROADMAP.md)
 
 ## 🎯 프로젝트 현황

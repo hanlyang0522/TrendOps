@@ -154,17 +154,17 @@ def summarize_weekly_news(articles: list[dict]) -> str:
         f"제목: {a['title']}\n내용: {a['content'][:500]}..."
         for a in articles
     ])
-    
+
     prompt = f"""
     취업 준비생을 위한 산업 트렌드 분석:
     {combined_text}
-    
+
     형식:
     1. 주요 동향 (2-3문장)
     2. 핵심 키워드 (5개)
     3. 취업 인사이트 (3-4문장)
     """
-    
+
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
@@ -174,7 +174,7 @@ def summarize_weekly_news(articles: list[dict]) -> str:
         temperature=0.7,
         max_tokens=1000
     )
-    
+
     return response.choices[0].message.content
 ```
 

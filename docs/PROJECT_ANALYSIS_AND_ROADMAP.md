@@ -107,7 +107,7 @@
      ```python
      # summarizer/openai_summarizer.py
      import openai
-     
+
      def summarize_news(articles: list[dict]) -> str:
          """OpenAI API로 뉴스 요약"""
          prompt = "다음 뉴스들을 산업 트렌드 관점에서 요약해주세요..."
@@ -121,7 +121,7 @@
      ```python
      # summarizer/local_summarizer.py
      from transformers import pipeline
-     
+
      # 한국어 요약 모델 사용
      summarizer = pipeline(
          "summarization",
@@ -177,13 +177,13 @@
    import streamlit as st
    import pandas as pd
    from db.db_news import get_all_summaries
-   
+
    st.title("TrendOps - 산업 트렌드 요약")
-   
+
    # 최근 요약 표시
    summaries = get_all_summaries()
    st.dataframe(summaries)
-   
+
    # 키워드별 필터링
    keyword = st.selectbox("기업 선택", ["당근마켓", "토스", "네이버"])
    ```
@@ -194,9 +194,9 @@
    ```python
    # api/main.py
    from fastapi import FastAPI
-   
+
    app = FastAPI()
-   
+
    @app.get("/summaries")
    def get_summaries(keyword: str = None):
        """요약 조회 API"""
@@ -243,7 +243,7 @@
        name VARCHAR(100),
        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
    );
-   
+
    CREATE TABLE user_interests (
        id SERIAL PRIMARY KEY,
        user_id INTEGER REFERENCES users(id),
@@ -281,25 +281,25 @@
    import smtplib
    from email.mime.text import MIMEText
    from email.mime.multipart import MIMEMultipart
-   
+
    def send_weekly_summary(user_email: str, summary: str):
        """주간 요약 메일 발송"""
        msg = MIMEMultipart()
        msg['Subject'] = "이번 주 산업 트렌드 요약"
        msg['From'] = "trendops@example.com"
        msg['To'] = user_email
-       
+
        body = f"""
        안녕하세요,
-       
+
        이번 주 주요 산업 트렌드입니다:
-       
+
        {summary}
-       
+
        TrendOps 드림
        """
        msg.attach(MIMEText(body, 'plain'))
-       
+
        # Gmail SMTP 예시
        server = smtplib.SMTP('smtp.gmail.com', 587)
        server.starttls()
@@ -389,7 +389,7 @@ def fetch_article_content(url: str) -> str:
     try:
         response = requests.get(url, headers=header, timeout=10)
         soup = BeautifulSoup(response.text, 'html.parser')
-        
+
         # 네이버 뉴스 본문 선택자
         article = soup.select_one('#dic_area')
         if article:
@@ -439,10 +439,10 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 def summarize_weekly_news(articles: list[dict[str, str]]) -> str:
     """
     주간 뉴스를 산업 트렌드 관점에서 요약합니다.
-    
+
     Args:
         articles: [{"title": "...", "content": "...", "url": "..."}]
-    
+
     Returns:
         요약된 텍스트
     """
@@ -451,21 +451,21 @@ def summarize_weekly_news(articles: list[dict[str, str]]) -> str:
         f"제목: {a['title']}\n내용: {a['content'][:500]}..."
         for a in articles
     ])
-    
+
     prompt = f"""
     당신은 취업 준비생을 위한 산업 트렌드 분석가입니다.
-    다음 뉴스 기사들을 분석하여, 해당 기업의 주요 동향과 
+    다음 뉴스 기사들을 분석하여, 해당 기업의 주요 동향과
     취업 지원자가 알아야 할 핵심 인사이트를 요약해주세요.
-    
+
     뉴스 기사들:
     {combined_text}
-    
+
     다음 형식으로 요약해주세요:
     1. 주요 동향 (2-3문장)
     2. 핵심 키워드 (5개)
     3. 취업 준비생을 위한 인사이트 (3-4문장)
     """
-    
+
     response = client.chat.completions.create(
         model="gpt-4o-mini",  # 비용 효율적
         messages=[
@@ -475,25 +475,25 @@ def summarize_weekly_news(articles: list[dict[str, str]]) -> str:
         temperature=0.7,
         max_tokens=1000
     )
-    
+
     return response.choices[0].message.content
 
 
 def main():
     """테스트용 메인 함수"""
     from db.db_news import get_recent_news
-    
+
     # 최근 7일 뉴스 가져오기
     articles = get_recent_news(days=7)
-    
+
     if not articles:
         print("요약할 뉴스가 없습니다.")
         return
-    
+
     summary = summarize_weekly_news(articles)
     print("=== 주간 요약 ===")
     print(summary)
-    
+
     # DB에 저장
     from db.db_news import save_summary
     save_summary(summary, len(articles))
@@ -518,7 +518,7 @@ def get_recent_news(days: int = 7) -> list[dict[str, str]]:
     try:
         conn = get_connection()
         cur = conn.cursor()
-        
+
         sql = """
             SELECT title, content, url, published_date
             FROM danggn_market_urls
@@ -528,7 +528,7 @@ def get_recent_news(days: int = 7) -> list[dict[str, str]]:
         cur.execute(sql, (days,))
         rows = cur.fetchall()
         cur.close()
-        
+
         return [
             {
                 "title": row[0],
@@ -552,7 +552,7 @@ def save_summary(summary_text: str, article_count: int, keyword: str = "당근�
     try:
         conn = get_connection()
         cur = conn.cursor()
-        
+
         sql = """
             INSERT INTO news_summaries (summary_date, keyword, summary_text, article_count)
             VALUES (CURRENT_DATE, %s, %s, %s)
@@ -560,7 +560,7 @@ def save_summary(summary_text: str, article_count: int, keyword: str = "당근�
         """
         cur.execute(sql, (keyword, summary_text, article_count))
         summary_id = cur.fetchone()[0]
-        
+
         conn.commit()
         print(f"Summary saved with ID: {summary_id}")
         cur.close()
@@ -633,7 +633,7 @@ def run_summarizer():
             text=True,
             timeout=600,  # 10분 타임아웃
         )
-        
+
         if result.returncode == 0:
             logger.info(f"Summarizer completed: {result.stdout}")
         else:
@@ -646,22 +646,22 @@ def main():
     """메인 스케줄러 함수"""
     schedule_time = os.getenv("CRAWL_SCHEDULE", "09:00")
     summary_time = os.getenv("SUMMARY_SCHEDULE", "21:00")  # 저녁 9시
-    
+
     logger.info(f"Scheduler started.")
     logger.info(f"Crawler: daily at {schedule_time}")
     logger.info(f"Summarizer: weekly on Sunday at {summary_time}")
-    
+
     # 매일 크롤링
     schedule.every().day.at(schedule_time).do(run_crawler)
-    
+
     # 매주 일요일 요약 생성
     schedule.every().sunday.at(summary_time).do(run_summarizer)
-    
+
     # 시작 시 즉시 실행
     if os.getenv("RUN_ON_START", "false").lower() == "true":
         logger.info("Running crawler immediately...")
         run_crawler()
-    
+
     while True:
         schedule.run_pending()
         time.sleep(60)
@@ -715,10 +715,10 @@ tab1, tab2 = st.tabs(["📊 주간 요약", "📰 전체 뉴스"])
 
 with tab1:
     st.header("주간 트렌드 요약")
-    
+
     # 요약 목록 가져오기
     summaries = get_all_summaries()
-    
+
     if summaries:
         for summary in summaries:
             with st.expander(
@@ -731,19 +731,19 @@ with tab1:
 
 with tab2:
     st.header("크롤링된 전체 뉴스")
-    
+
     # 검색 키워드 필터
     keyword_filter = st.text_input("기업명으로 검색", "")
-    
+
     # 뉴스 목록
     news = get_all_news()
-    
+
     if news:
         df = pd.DataFrame(news, columns=['ID', 'Title', 'URL', 'Crawled At'])
-        
+
         if keyword_filter:
             df = df[df['Title'].str.contains(keyword_filter, case=False, na=False)]
-        
+
         st.dataframe(df, use_container_width=True)
         st.metric("총 뉴스 수", len(df))
     else:
@@ -754,10 +754,10 @@ with st.sidebar:
     st.header("📌 통계")
     total_news = len(get_all_news())
     total_summaries = len(get_all_summaries())
-    
+
     st.metric("전체 뉴스", total_news)
     st.metric("생성된 요약", total_summaries)
-    
+
     st.markdown("---")
     st.markdown("### 🔄 업데이트")
     st.info("매일 오전 9시 뉴스 크롤링\n매주 일요일 저녁 9시 요약 생성")
@@ -773,16 +773,16 @@ def get_all_summaries() -> list[dict]:
     try:
         conn = get_connection()
         cur = conn.cursor()
-        
+
         cur.execute("""
             SELECT summary_date, keyword, summary_text, article_count, created_at
             FROM news_summaries
             ORDER BY summary_date DESC;
         """)
-        
+
         rows = cur.fetchall()
         cur.close()
-        
+
         return [
             {
                 "summary_date": row[0],
