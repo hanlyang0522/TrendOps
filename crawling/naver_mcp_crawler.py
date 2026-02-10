@@ -5,7 +5,7 @@ Naver OpenAPI를 사용하여 뉴스를 검색하고 크롤링합니다.
 """
 
 import os
-from typing import Optional
+from typing import Any, Optional
 
 import requests
 
@@ -42,7 +42,7 @@ class NaverMCPCrawler:
         display: int = 10,
         start: int = 1,
         sort: str = "date",
-    ) -> dict:
+    ) -> Any:
         """
         Naver 뉴스 검색
 
@@ -72,7 +72,7 @@ class NaverMCPCrawler:
             "X-Naver-Client-Secret": self.client_secret,
         }
 
-        params = {
+        params: dict[str, str | int] = {
             "query": query,
             "display": display,
             "start": start,

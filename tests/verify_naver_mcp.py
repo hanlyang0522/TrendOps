@@ -42,7 +42,7 @@ def test_import():
     print("=" * 60)
 
     try:
-        from crawling.naver_mcp_crawler import NaverMCPCrawler
+        from crawling.naver_mcp_crawler import NaverMCPCrawler  # noqa: F401
 
         print("✅ NaverMCPCrawler 모듈 import 성공")
         return True
@@ -63,11 +63,15 @@ def test_initialization():
         # Mock credentials로 초기화 테스트
         crawler = NaverMCPCrawler(client_id="test_id", client_secret="test_secret")
         print("✅ 크롤러 초기화 성공 (mock credentials)")
+        # Verify the crawler is properly initialized
+        assert crawler.client_id == "test_id"
 
         # 환경 변수로 초기화 테스트
         if os.getenv("X_NAVER_CLIENT_ID"):
-            crawler = NaverMCPCrawler()
+            env_crawler = NaverMCPCrawler()
             print("✅ 크롤러 초기화 성공 (환경 변수)")
+            # Verify the crawler is properly initialized
+            assert env_crawler.client_id is not None
 
         return True
     except Exception as e:
@@ -97,7 +101,7 @@ def test_search(use_real_api=False):
         total = result.get("total", 0)
         items = result.get("items", [])
 
-        print(f"✅ 검색 성공!")
+        print("✅ 검색 성공!")
         print(f"   총 검색 결과: {total:,}개")
         print(f"   반환된 기사: {len(items)}개")
 
