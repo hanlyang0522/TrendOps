@@ -1,5 +1,28 @@
 # TrendOps: LLM 기반 산업 트렌드 요약 서비스
 
+> 📖 **프로젝트 분석 및 개발 가이드**: [docs/QUICK_START_GUIDE.md](docs/QUICK_START_GUIDE.md)
+> 📊 **상세 로드맵**: [docs/PROJECT_ANALYSIS_AND_ROADMAP.md](docs/PROJECT_ANALYSIS_AND_ROADMAP.md)
+
+## 🎯 프로젝트 현황
+
+**진행도**: 35-40% | **현재 단계**: Phase 1 준비 완료 (크롤링 + DB + 스케줄링)
+
+### ✅ 완료
+- Docker 컨테이너화
+- 네이버 뉴스 크롤링
+- PostgreSQL 데이터베이스
+- 스케줄링 (매일 09:00)
+
+### 🚧 다음 단계
+1. **Phase 1 (최우선)**: LLM 기반 뉴스 요약
+2. **Phase 2**: Streamlit 웹 UI
+3. **Phase 3**: 사용자 관리
+4. **Phase 4**: 이메일 알림
+
+자세한 내용은 [개발 가이드](docs/QUICK_START_GUIDE.md)를 참고하세요.
+
+---
+
 ## 🚀 Quick Start (Docker)
 
 ### 전체 시스템 실행
