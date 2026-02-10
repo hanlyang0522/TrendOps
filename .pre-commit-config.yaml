@@ -41,15 +41,17 @@ repos:
         additional_dependencies: [types-requests, types-psycopg2]
 
 # Jupyter 노트북 linting 및 포맷팅
--   repo: https://github.com/nbQA-dev/nbQA
-    rev: 1.9.1
-    hooks:
-    -   id: nbqa-black
-        name: nbqa-black
-        args: ["--line-length=88"]
-    -   id: nbqa-isort
-        name: nbqa-isort
-        args: ["--profile=black"]
-    -   id: nbqa-flake8
-        name: nbqa-flake8
-        args: ["--max-line-length=88", "--extend-ignore=E203,W503,E501"]
+# Note: nbqa hooks disabled due to formatting instability with notebook metadata
+# Notebooks are for development/exploration and don't require strict formatting
+# -   repo: https://github.com/nbQA-dev/nbQA
+#     rev: 1.9.1
+#     hooks:
+#     -   id: nbqa-black
+#         name: nbqa-black
+#         args: ["--line-length=88"]
+#     -   id: nbqa-isort
+#         name: nbqa-isort
+#         args: ["--profile=black"]
+#     -   id: nbqa-flake8
+#         name: nbqa-flake8
+#         args: ["--max-line-length=88", "--extend-ignore=E203,W503,E501"]
