@@ -261,17 +261,283 @@ def fetch_news(keyword: str, limit: int = 10) -> list[dict[str, str]]:
 When generating code:
 
 1. Follow established patterns in the codebase
-2. Use Python 3.13 native type hints
+2. **CRITICAL: Use Python 3.13 native type hints** (no `typing` module imports)
 3. Add Google-style docstrings
 4. Handle errors gracefully
 5. Use environment variables from `os.getenv()`
 6. Follow 88 character line length
+7. **ALWAYS verify pre-commit compliance before committing**
 
 ### Context-Aware
 - Database operations use `db/db_news.py`
 - Web scraping uses BeautifulSoup4
 - Configuration from environment variables
 - Docker is primary deployment
+
+---
+
+## 12. Code Style Examples (Based on Actual Codebase)
+
+This section shows **real patterns from the codebase** that you must follow.
+
+### Import Ordering (isort with black profile)
+
+**✅ CORRECT - Actual pattern from codebase:**
+```python
+"""
+Module docstring here.
+"""
+
+import os
+
+import requests
+from bs4 import BeautifulSoup
+
+from db.db_news import create_new_news, get_connection
+```
+
+**Pattern rules:**
+1. Module docstring first
+2. Standard library imports (sorted alphabetically)
+3. **Blank line**
+4. Third-party library imports (sorted alphabetically)
+5. **Blank line**
+6. Local/project imports (sorted alphabetically)
+7. **Blank line** before first code
+
+**❌ WRONG - Missing blank lines:**
+```python
+import os
+import requests
+from db.db_news import get_connection
+```
+
+### Python 3.13 Native Type Hints
+
+**✅ CRITICAL: ALWAYS use Python 3.13 native syntax:**
+```python
+# Simple types
+def fetch_news(keyword: str, limit: int = 10) -> list[dict[str, str]]:
+    pass
+
+# Union types - use | instead of Union
+def get_value(x: str | None) -> int | None:
+    pass
+
+# Complex nested types
+params: dict[str, str | int] = {
+    "query": "keyword",
+    "start": 0,
+}
+
+# List comprehensions with type hints
+missing_vars: list[str] = [var for var in required_vars if not os.getenv(var)]
+```
+
+**❌ NEVER use the typing module (Python <3.9 style):**
+```python
+# WRONG - Do not import from typing
+from typing import Dict, List, Optional, Union
+
+def fetch_news(keyword: str) -> List[Dict[str, str]]:  # ❌ NO
+    pass
+
+def get_value(x: Optional[str]) -> Optional[int]:  # ❌ NO
+    pass
+```
+
+### 88-Character Line Length Handling
+
+**✅ CORRECT - String continuation (from actual code):**
+```python
+header = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+    )
+}
+```
+
+**✅ CORRECT - Long function calls:**
+```python
+result = subprocess.run(
+    ["python", "-m", "crawling.news_crawling"],
+    cwd="/app",
+    capture_output=True,
+    text=True,
+    timeout=300,
+)
+```
+
+**✅ CORRECT - F-strings (preferred):**
+```python
+logger.info(f"Scheduler started. Will run crawler daily at {schedule_time}")
+logger.error(f"Database connection failed: {e}")
+```
+
+### Error Handling Pattern (From Actual Code)
+
+**✅ CORRECT - Standard pattern used in codebase:**
+```python
+def create_new_news(title: str, url: str):
+    """Create new news in database."""
+    conn = None
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        
+        sql = (
+            "INSERT INTO danggn_market_urls (title, url) "
+            "VALUES (%s, %s) RETURNING id;"
+        )
+        cur.execute(sql, (title, url))
+        
+        news_id = cur.fetchone()[0]
+        
+        conn.commit()
+        print(f"News created successfully with ID: {news_id}")
+        cur.close()
+        
+    except Exception as e:
+        print(f"Failed to create news: {e}")
+    finally:
+        if conn:
+            conn.close()
+```
+
+### Google-Style Docstrings
+
+**✅ CORRECT - Actual pattern from codebase:**
+```python
+def get_connection():
+    """
+    DB 연결을 생성
+    환경 변수에서 데이터베이스 연결 정보를 읽어옵니다.
+    """
+    # ... implementation
+```
+
+**✅ CORRECT - With parameters:**
+```python
+def fetch_news(keyword: str, limit: int = 10) -> list[dict[str, str]]:
+    """Fetch news articles from Naver News.
+    
+    Args:
+        keyword: Search keyword (e.g., "당근마켓")
+        limit: Maximum articles to fetch
+        
+    Returns:
+        List of dictionaries with article data
+        
+    Raises:
+        ValueError: If keyword is empty
+    """
+    pass
+```
+
+---
+
+## 13. Common Mistakes to Avoid
+
+### ❌ Mistake 1: Using old typing module
+
+**WRONG:**
+```python
+from typing import Dict, List, Optional, Union
+
+def foo() -> Dict[str, List[int]]:
+    pass
+
+def bar(x: Optional[str]) -> Union[int, None]:
+    pass
+```
+
+**CORRECT:**
+```python
+# No typing imports needed!
+
+def foo() -> dict[str, list[int]]:
+    pass
+
+def bar(x: str | None) -> int | None:
+    pass
+```
+
+### ❌ Mistake 2: Wrong import order
+
+**WRONG:**
+```python
+from db.db_news import get_connection
+import os
+import requests
+```
+
+**CORRECT:**
+```python
+import os
+
+import requests
+
+from db.db_news import get_connection
+```
+
+### ❌ Mistake 3: Not handling long lines
+
+**WRONG:**
+```python
+header = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"}
+```
+
+**CORRECT:**
+```python
+header = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+    )
+}
+```
+
+### ❌ Mistake 4: Inconsistent string formatting
+
+**WRONG - mixing styles:**
+```python
+print("Title: " + title + "\nURL: " + url)
+```
+
+**CORRECT - use f-strings consistently:**
+```python
+print(f"Title: {title}\nURL: {url}\n")
+```
+
+---
+
+## 14. Pre-commit Workflow for Copilot
+
+**IMPORTANT**: Before using `report_progress` tool, ensure your code passes all checks:
+
+### Pre-commit Checklist
+- [ ] **Type hints**: All use Python 3.13 native syntax (no `typing` imports)
+- [ ] **Import order**: stdlib → blank → third-party → blank → local
+- [ ] **Line length**: All lines ≤ 88 characters
+- [ ] **Docstrings**: Google-style docstrings for all public functions
+- [ ] **No trailing whitespace**
+- [ ] **Files end with newline**
+- [ ] **F-strings**: Use f-strings for string formatting
+
+### Tools that will run in CI
+1. **black** - Code formatting (line-length=88)
+2. **isort** - Import sorting (profile=black)
+3. **flake8** - Linting (max-line-length=88, ignore E203,W503)
+4. **mypy** - Type checking (Python 3.13)
+5. **trailing-whitespace** - No trailing spaces
+6. **end-of-file-fixer** - Files end with newline
+
+### If CI fails
+1. Read the error message carefully
+2. Check which file and line number failed
+3. Compare against examples in Section 12
+4. Fix and re-run locally (if possible) before committing
 
 ---
 
@@ -322,8 +588,12 @@ make clean          # Remove all containers and volumes
 
 ---
 
-**Last Updated:** 2026-01-14
+**Last Updated:** 2026-02-10
 
-**Version:** 1.0.0
+**Version:** 2.0.0
+
+**Changelog:**
+- v2.0.0 (2026-02-10): Added concrete code examples, common mistakes section, Python 3.13 type hints emphasis
+- v1.0.0 (2026-01-14): Initial version with Git Flow and basic conventions
 
 This document should be updated whenever significant changes to the project structure, workflow, or conventions are made.
