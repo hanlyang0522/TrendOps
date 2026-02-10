@@ -5,7 +5,6 @@ Naver OpenAPI를 사용하여 뉴스를 검색하고 크롤링합니다.
 """
 
 import os
-from datetime import datetime
 from typing import Optional
 
 import requests
@@ -87,7 +86,7 @@ class NaverMCPCrawler:
                 params=params,
                 timeout=10,
             )
-            
+
             # 에러 상태 코드 체크
             if response.status_code == 401:
                 raise ValueError(
@@ -97,7 +96,7 @@ class NaverMCPCrawler:
                 raise ValueError(
                     "API 호출 한도를 초과했습니다. 잠시 후 다시 시도하세요."
                 )
-            
+
             response.raise_for_status()
             return response.json()
 
@@ -190,7 +189,7 @@ def main():
     max_pages = int(os.getenv("MAX_PAGES", "3"))
     sort = os.getenv("SORT_ORDER", "date")
 
-    print(f"=== Naver MCP 뉴스 크롤링 시작 ===")
+    print("=== Naver MCP 뉴스 크롤링 시작 ===")
     print(f"키워드: {keyword}")
     print(f"최대 페이지: {max_pages}")
     print(f"정렬: {sort}")

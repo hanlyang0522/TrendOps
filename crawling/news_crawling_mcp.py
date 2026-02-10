@@ -17,7 +17,7 @@ def main():
     max_pages = int(os.getenv("MAX_PAGES", "3"))
     sort = os.getenv("SORT_ORDER", "date")
 
-    print(f"=== Naver MCP 뉴스 크롤링 및 DB 저장 시작 ===")
+    print("=== Naver MCP 뉴스 크롤링 및 DB 저장 시작 ===")
     print(f"키워드: {keyword}")
     print(f"최대 페이지: {max_pages}")
     print(f"정렬: {sort}")

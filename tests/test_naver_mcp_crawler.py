@@ -7,7 +7,7 @@ Naver MCP 크롤러 테스트
    - API 키 없이 실행 가능 ✅
    - unittest.mock을 사용하여 실제 API 호출을 가짜 응답으로 대체
    - 빠르고 안정적 (~0.1초)
-   
+
 2. 통합 테스트 (Integration Tests) - 실제 API 호출
    - API 키 필요 (환경 변수)
    - 환경 변수가 없으면 자동으로 skip
@@ -27,9 +27,9 @@ from crawling.naver_mcp_crawler import NaverMCPCrawler
 class TestNaverMCPCrawler:
     """
     Naver MCP 크롤러 단위 테스트
-    
+
     ⚠️ 이 테스트들은 Mock을 사용하므로 API 키가 필요하지 않습니다!
-    
+
     Mock이란?
     - 실제 API 호출을 가짜 응답으로 대체하는 기술
     - requests.get()을 Mock 객체로 교체하여 네트워크 호출 없이 테스트
@@ -88,14 +88,14 @@ class TestNaverMCPCrawler:
     def test_search_news_success(self, mock_get):
         """
         정상적인 뉴스 검색 테스트
-        
+
         🎭 Mock 사용 예시:
         1. @patch 데코레이터로 requests.get을 Mock으로 대체
         2. 가짜 응답 데이터 정의 (실제 Naver API 응답 형식)
         3. Mock이 이 가짜 데이터를 반환하도록 설정
         4. 실제 코드 실행 → Mock이 가짜 데이터 반환
         5. 결과 검증
-        
+
         ✅ API 키 없이 테스트 가능!
         ✅ 네트워크 호출 없음!
         ✅ 빠른 실행 (~0.01초)!
@@ -123,14 +123,14 @@ class TestNaverMCPCrawler:
                 },
             ],
         }
-        
+
         # 🎭 Step 2: requests.get()이 위의 Mock 응답을 반환하도록 설정
         mock_get.return_value = mock_response
 
         # 🎭 Step 3: 크롤러 실행 (API 키는 아무 값이나 가능)
         crawler = NaverMCPCrawler(client_id="test", client_secret="test")
         result = crawler.search_news(query="당근마켓", display=10)
-        
+
         # 실제로는 requests.get()이 호출되지만
         # Mock 덕분에 네트워크 호출 없이 위의 가짜 데이터가 반환됨!
 
@@ -176,6 +176,7 @@ class TestNaverMCPCrawler:
     @patch("crawling.naver_mcp_crawler.requests.get")
     def test_crawl_news_multiple_pages(self, mock_get):
         """여러 페이지 크롤링 테스트"""
+
         # Mock 응답 설정 (페이지별로 다른 응답)
         def mock_response_side_effect(*args, **kwargs):
             start = kwargs["params"]["start"]
@@ -224,9 +225,7 @@ class TestNaverMCPCrawler:
 
         # 기본 HTML 태그
         assert crawler._remove_html_tags("<b>굵은글씨</b>") == "굵은글씨"
-        assert (
-            crawler._remove_html_tags("<b>당근</b><i>마켓</i>") == "당근마켓"
-        )
+        assert crawler._remove_html_tags("<b>당근</b><i>마켓</i>") == "당근마켓"
 
         # HTML 엔티티
         assert crawler._remove_html_tags("&quot;인용&quot;") == '"인용"'
@@ -234,10 +233,7 @@ class TestNaverMCPCrawler:
         assert crawler._remove_html_tags("&lt;&gt;") == "<>"
 
         # 복합
-        assert (
-            crawler._remove_html_tags("<b>&quot;당근마켓&quot;</b>")
-            == '"당근마켓"'
-        )
+        assert crawler._remove_html_tags("<b>&quot;당근마켓&quot;</b>") == '"당근마켓"'
 
 
 # =============================================================================
@@ -261,6 +257,7 @@ class TestNaverMCPCrawler:
 #    python -m pytest tests/test_naver_mcp_crawler.py -v
 # =============================================================================
 
+
 @pytest.mark.skipif(
     not os.getenv("X_NAVER_CLIENT_ID") or not os.getenv("X_NAVER_CLIENT_SECRET"),
     reason="Naver OpenAPI credentials not available",
@@ -268,16 +265,16 @@ class TestNaverMCPCrawler:
 class TestNaverMCPCrawlerIntegration:
     """
     Naver MCP 크롤러 통합 테스트
-    
+
     ⚠️ 이 테스트들은 실제 Naver API를 호출합니다!
-    
+
     차이점:
     - Mock 사용 안 함
     - 실제 네트워크 호출
     - API 키 필요 (환경 변수)
     - 느린 실행 (~1-2초)
     - 외부 의존성 (Naver API 서버 상태)
-    
+
     목적:
     - 실제 API와의 통합이 올바른지 확인
     - API 스펙 변경 감지
@@ -287,7 +284,7 @@ class TestNaverMCPCrawlerIntegration:
     def test_real_api_search(self):
         """
         실제 API를 사용한 뉴스 검색
-        
+
         ⚠️ 실제 Naver API 호출 - API 키 필요!
         ⚠️ 네트워크 연결 필요!
         ⚠️ API 할당량 소모 (1건)
@@ -311,7 +308,7 @@ class TestNaverMCPCrawlerIntegration:
     def test_real_api_crawl(self):
         """
         실제 API를 사용한 다중 페이지 크롤링
-        
+
         ⚠️ 실제 Naver API 호출 - API 키 필요!
         ⚠️ 네트워크 연결 필요!
         ⚠️ API 할당량 소모 (1건)
