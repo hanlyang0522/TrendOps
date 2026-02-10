@@ -6,15 +6,14 @@ Naver MCP 기능 테스트 스크립트
 Mock 데이터를 사용하므로 API 키 없이 실행 가능합니다.
 """
 
+import os
 import sys
 from unittest.mock import Mock, patch
 
 # 프로젝트 루트를 Python path에 추가
-import os
-
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from crawling.naver_mcp_crawler import NaverMCPCrawler
+from crawling.naver_mcp_crawler import NaverMCPCrawler  # noqa: E402
 
 
 def test_basic_functionality():
@@ -63,14 +62,14 @@ def test_basic_functionality():
         # 뉴스 검색
         result = crawler.search_news(query="당근마켓", display=10)
 
-        print(f"\n✅ 뉴스 검색 성공")
+        print("\n✅ 뉴스 검색 성공")
         print(f"   총 검색 결과: {result['total']:,}개")
         print(f"   반환된 기사: {len(result['items'])}개")
 
         # 첫 번째 기사 정보
         if result["items"]:
             first = result["items"][0]
-            print(f"\n📰 첫 번째 기사:")
+            print("\n📰 첫 번째 기사:")
             print(f"   제목: {first['title']}")
             print(f"   링크: {first['link']}")
             print(f"   날짜: {first['pubDate']}")
@@ -151,7 +150,7 @@ def test_multi_page_crawling():
         crawler = NaverMCPCrawler(client_id="test", client_secret="test")
         result = crawler.crawl_news(keyword="테스트", max_pages=2)
 
-        print(f"\n✅ 다중 페이지 크롤링 성공")
+        print("\n✅ 다중 페이지 크롤링 성공")
         print(f"   총 수집 기사: {len(result)}개")
         print(f"   첫 번째 기사: {result[0]['title']}")
         print(f"   마지막 기사: {result[-1]['title']}")
