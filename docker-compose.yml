@@ -58,8 +58,8 @@ services:
       MAX_ARTICLES: ${MAX_ARTICLES:-50}
       MAX_PAGES: ${MAX_PAGES:-3}
       SORT_ORDER: ${SORT_ORDER:-date}
-      X_NAVER_CLIENT_ID: ${X_NAVER_CLIENT_ID:?X_NAVER_CLIENT_ID is required}
-      X_NAVER_CLIENT_SECRET: ${X_NAVER_CLIENT_SECRET:?X_NAVER_CLIENT_SECRET is required}
+      NAVER_CLIENT_ID: ${NAVER_CLIENT_ID:?NAVER_CLIENT_ID is required}
+      NAVER_CLIENT_SECRET: ${NAVER_CLIENT_SECRET:?NAVER_CLIENT_SECRET is required}
     networks:
       - trendops-network
     volumes:
@@ -84,8 +84,8 @@ services:
       RUN_ON_START: ${RUN_ON_START:-false}
       MAX_PAGES: ${MAX_PAGES:-3}
       SORT_ORDER: ${SORT_ORDER:-date}
-      X_NAVER_CLIENT_ID: ${X_NAVER_CLIENT_ID:?X_NAVER_CLIENT_ID is required}
-      X_NAVER_CLIENT_SECRET: ${X_NAVER_CLIENT_SECRET:?X_NAVER_CLIENT_SECRET is required}
+      NAVER_CLIENT_ID: ${NAVER_CLIENT_ID:?NAVER_CLIENT_ID is required}
+      NAVER_CLIENT_SECRET: ${NAVER_CLIENT_SECRET:?NAVER_CLIENT_SECRET is required}
     networks:
       - trendops-network
     volumes:

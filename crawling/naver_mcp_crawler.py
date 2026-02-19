@@ -27,13 +27,13 @@ class NaverMCPCrawler:
             client_id: Naver OpenAPI Client ID
             client_secret: Naver OpenAPI Client Secret
         """
-        self.client_id = client_id or os.getenv("X_NAVER_CLIENT_ID")
-        self.client_secret = client_secret or os.getenv("X_NAVER_CLIENT_SECRET")
+        self.client_id = client_id or os.getenv("NAVER_CLIENT_ID")
+        self.client_secret = client_secret or os.getenv("NAVER_CLIENT_SECRET")
 
         if not self.client_id or not self.client_secret:
             raise ValueError(
                 "Naver OpenAPI credentials are required. "
-                "Set X_NAVER_CLIENT_ID and X_NAVER_CLIENT_SECRET environment variables."
+                "Set NAVER_CLIENT_ID and NAVER_CLIENT_SECRET environment variables."
             )
 
     def search_news(
@@ -225,8 +225,8 @@ def main():
         print(f"설정 오류: {e}")
         print(
             "\n환경 변수를 확인하세요:"
-            "\n  X_NAVER_CLIENT_ID"
-            "\n  X_NAVER_CLIENT_SECRET"
+            "\n  NAVER_CLIENT_ID"
+            "\n  NAVER_CLIENT_SECRET"
         )
     except Exception as e:
         print(f"크롤링 중 오류 발생: {e}")

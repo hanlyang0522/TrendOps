@@ -50,8 +50,8 @@ class TestNaverMCPCrawler:
         with patch.dict(
             os.environ,
             {
-                "X_NAVER_CLIENT_ID": "env_id",
-                "X_NAVER_CLIENT_SECRET": "env_secret",
+                "NAVER_CLIENT_ID": "env_id",
+                "NAVER_CLIENT_SECRET": "env_secret",
             },
         ):
             crawler = NaverMCPCrawler()
@@ -242,8 +242,8 @@ class TestNaverMCPCrawler:
 # ⚠️ 주의: 이 테스트들은 실제 Naver API를 호출합니다!
 #
 # 실행 조건:
-# - X_NAVER_CLIENT_ID 환경 변수 필요
-# - X_NAVER_CLIENT_SECRET 환경 변수 필요
+# - NAVER_CLIENT_ID 환경 변수 필요
+# - NAVER_CLIENT_SECRET 환경 변수 필요
 # - 인터넷 연결 필요
 #
 # 환경 변수가 없으면 자동으로 skip됩니다.
@@ -251,15 +251,15 @@ class TestNaverMCPCrawler:
 # 실행 방법:
 # 1. API 키 발급: https://developers.naver.com/
 # 2. 환경 변수 설정:
-#    export X_NAVER_CLIENT_ID=your_client_id
-#    export X_NAVER_CLIENT_SECRET=your_client_secret
+#    export NAVER_CLIENT_ID=your_client_id
+#    export NAVER_CLIENT_SECRET=your_client_secret
 # 3. 테스트 실행:
 #    python -m pytest tests/test_naver_mcp_crawler.py -v
 # =============================================================================
 
 
 @pytest.mark.skipif(
-    not os.getenv("X_NAVER_CLIENT_ID") or not os.getenv("X_NAVER_CLIENT_SECRET"),
+    not os.getenv("NAVER_CLIENT_ID") or not os.getenv("NAVER_CLIENT_SECRET"),
     reason="Naver OpenAPI credentials not available",
 )
 class TestNaverMCPCrawlerIntegration:

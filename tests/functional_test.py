@@ -230,8 +230,8 @@ def main():
         print("\n💡 실제 API를 사용하려면:")
         print("   1. https://developers.naver.com/ 에서 API 키 발급")
         print("   2. 환경 변수 설정:")
-        print("      export X_NAVER_CLIENT_ID=your_id")
-        print("      export X_NAVER_CLIENT_SECRET=your_secret")
+        print("      export NAVER_CLIENT_ID=your_id")
+        print("      export NAVER_CLIENT_SECRET=your_secret")
         print("   3. 크롤러 실행:")
         print("      python -m crawling.naver_mcp_crawler")
         return 0

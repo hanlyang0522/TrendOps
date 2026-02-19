@@ -63,8 +63,8 @@ def main():
         print(f"설정 오류: {e}")
         print(
             "\n환경 변수를 확인하세요:"
-            "\n  X_NAVER_CLIENT_ID"
-            "\n  X_NAVER_CLIENT_SECRET"
+            "\n  NAVER_CLIENT_ID"
+            "\n  NAVER_CLIENT_SECRET"
             "\n  POSTGRES_HOST"
             "\n  POSTGRES_DB"
             "\n  POSTGRES_USER"

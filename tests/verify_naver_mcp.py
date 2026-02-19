@@ -18,19 +18,19 @@ def check_environment():
     print("1. 환경 변수 확인")
     print("=" * 60)
 
-    client_id = os.getenv("X_NAVER_CLIENT_ID")
-    client_secret = os.getenv("X_NAVER_CLIENT_SECRET")
+    client_id = os.getenv("NAVER_CLIENT_ID")
+    client_secret = os.getenv("NAVER_CLIENT_SECRET")
 
     if client_id and client_secret:
-        print("✅ X_NAVER_CLIENT_ID: 설정됨")
-        print("✅ X_NAVER_CLIENT_SECRET: 설정됨")
+        print("✅ NAVER_CLIENT_ID: 설정됨")
+        print("✅ NAVER_CLIENT_SECRET: 설정됨")
         print(f"   Client ID 길이: {len(client_id)} 문자")
         return True
     else:
         print("❌ Naver OpenAPI 환경 변수가 설정되지 않았습니다.")
         print("\n다음 변수를 .env 파일에 설정하세요:")
-        print("  X_NAVER_CLIENT_ID=your_client_id")
-        print("  X_NAVER_CLIENT_SECRET=your_client_secret")
+        print("  NAVER_CLIENT_ID=your_client_id")
+        print("  NAVER_CLIENT_SECRET=your_client_secret")
         print("\nNaver OpenAPI 신청: https://developers.naver.com/")
         return False
 
@@ -67,7 +67,7 @@ def test_initialization():
         assert crawler.client_id == "test_id"
 
         # 환경 변수로 초기화 테스트
-        if os.getenv("X_NAVER_CLIENT_ID"):
+        if os.getenv("NAVER_CLIENT_ID"):
             env_crawler = NaverMCPCrawler()
             print("✅ 크롤러 초기화 성공 (환경 변수)")
             # Verify the crawler is properly initialized
@@ -251,7 +251,7 @@ def main():
         if skipped > 0:
             print("\n💡 실제 API 테스트를 위해 환경 변수를 설정하세요:")
             print("   1. https://developers.naver.com/ 에서 API 키 발급")
-            print("   2. .env 파일에 X_NAVER_CLIENT_ID, X_NAVER_CLIENT_SECRET 설정")
+            print("   2. .env 파일에 NAVER_CLIENT_ID, NAVER_CLIENT_SECRET 설정")
             print("   3. 이 스크립트 다시 실행")
         return 0
     else:

@@ -71,8 +71,8 @@ make status
 ```bash
 # Naver OpenAPI (필수!)
 # https://developers.naver.com/에서 발급
-X_NAVER_CLIENT_ID=your_naver_client_id_here
-X_NAVER_CLIENT_SECRET=your_naver_client_secret_here
+NAVER_CLIENT_ID=your_naver_client_id_here
+NAVER_CLIENT_SECRET=your_naver_client_secret_here
 
 # Database
 POSTGRES_HOST=postgres
@@ -167,7 +167,7 @@ cp .env.example .env
 
 # 2. .env 파일에서 보안 정보 수정
 # - POSTGRES_PASSWORD를 강력한 패스워드로 변경
-# - X_NAVER_CLIENT_ID와 X_NAVER_CLIENT_SECRET 입력 (https://developers.naver.com/)
+# - NAVER_CLIENT_ID와 NAVER_CLIENT_SECRET 입력 (https://developers.naver.com/)
 nano .env  # 또는 선호하는 에디터 사용
 ```
 
