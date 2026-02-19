@@ -20,6 +20,12 @@
 - `db/` - Database connection and queries
 - `scripts/` - Utility scripts
 
+**Working Style:**
+- 🎯 **Focus on code**: Prioritize writing/modifying code over creating documentation
+- 📝 **Minimal documentation**: Only document when code changes require it
+- 🚫 **No unnecessary reports**: Don't create separate analysis/review/report documents unless explicitly requested
+- ✅ **Direct answers**: For questions and reviews, provide concise answers in responses, not as separate files
+
 ---
 
 ## 2. Branch Strategy (Git Flow - Simplified)
@@ -233,10 +239,18 @@ Required variables: `POSTGRES_HOST`, `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_P
 - Test files: `tests/test_<module>.py`
 - Use meaningful names: `test_crawler_handles_empty_results()`
 
-### Documentation
+### Documentation Guidelines
+
+**When to Document:**
+- ✅ **Code changes only**: Update documentation when modifying actual code
+- ✅ **New features**: Update README.md for significant new features
+- ✅ **Environment changes**: Document new environment variables in `.env.example`
+- ❌ **Don't create reports**: Avoid creating separate report/analysis documents unless explicitly requested
+- ❌ **No documentation for reviews**: Simple code reviews, analysis, or verification tasks don't need separate documentation files
+
+**Code Documentation:**
 - Google-style docstrings for all functions
-- Update README.md for new features
-- Document environment variables in `.env.example`
+- Inline comments only when logic is complex
 
 Example:
 ```python
