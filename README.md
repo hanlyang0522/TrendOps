@@ -300,3 +300,5 @@ docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
     - [ ] (Optional) `scheduler`가 `emailer.py`도 실행하도록 추가
 
 🏁 최종 마일스톤: 누구나 `README.md`를 보고 프로젝트를 손쉽게 실행할 수 있음
+
+✅ **CI/CD Balanced Mode 적용 완료** (2026-02-19)
