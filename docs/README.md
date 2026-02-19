@@ -4,7 +4,9 @@
 
 ## 📚 문서 목록
 
-### 1. [QUICK_START_GUIDE.md](./QUICK_START_GUIDE.md)
+### 프로젝트 개발 가이드
+
+#### 1. [QUICK_START_GUIDE.md](./QUICK_START_GUIDE.md)
 **빠른 시작 가이드 - 지금 바로 읽으세요! 👈**
 
 - 현재 프로젝트 상태 요약
@@ -19,7 +21,7 @@
 
 ---
 
-### 2. [PROJECT_ANALYSIS_AND_ROADMAP.md](./PROJECT_ANALYSIS_AND_ROADMAP.md)
+#### 2. [PROJECT_ANALYSIS_AND_ROADMAP.md](./PROJECT_ANALYSIS_AND_ROADMAP.md)
 **상세 프로젝트 분석 및 로드맵**
 
 - 완전한 프로젝트 현황 분석
@@ -35,10 +37,67 @@
 
 ---
 
+### CI/CD 가이드 🔧
+
+#### 3. [CI_CD_REVIEW.md](./CI_CD_REVIEW.md)
+**CI/CD 설정 검토** (2026-02-09)
+
+- 현재 CI/CD 설정 상세 검토
+- 설정 일관성 분석
+- 문제점 진단
+
+**누구를 위한 문서**: CI/CD 설정을 이해하고 싶은 개발자
+
+**예상 읽기 시간**: 15분
+
+---
+
+#### 4. [CI_CD_IMPROVEMENT_GUIDE.md](./CI_CD_IMPROVEMENT_GUIDE.md) ⭐
+**CI/CD 개선 가이드** (2026-02-10, 17KB)
+
+- 업계 표준 CI/CD 엄격도 수준 조사
+- TrendOps 진단 및 문제점 분석
+- 3가지 개선 옵션 (Balanced/Learning/Progressive)
+- Copilot 통합 개선 5가지 방법
+- 학습 리소스
+
+**누구를 위한 문서**: CI/CD로 인한 생산성 저하를 겪는 개발자
+
+**예상 읽기 시간**: 40분
+
+---
+
+#### 5. [CI_CD_TRANSITION_STRATEGY.md](./CI_CD_TRANSITION_STRATEGY.md) 🚀
+**Balanced Mode 전환 전략** (2026-02-19, 11KB)
+
+- 5단계 안전한 전환 프로세스
+- 모든 설정 파일 변경 내용
+- 문제 해결 가이드
+- 전환 전후 비교
+
+**누구를 위한 문서**: Balanced Mode로 실제 전환하려는 개발자
+
+**예상 읽기 시간**: 20분
+
+---
+
+#### 6. [CI_CD_QUICK_REFERENCE.md](./CI_CD_QUICK_REFERENCE.md) ⚡
+**빠른 참조 가이드** (2026-02-19, 5KB)
+
+- 한눈에 보는 전환 순서
+- 복사-붙여넣기 가능한 명령어
+- 필수 변경사항 체크리스트
+- 빠른 문제 해결
+
+**누구를 위한 문서**: 빠르게 전환만 하고 싶은 개발자
+
+**예상 읽기 시간**: 5분
+
+---
+
 ## 🚀 처음 오신 분들께
 
-### 추천 순서
-
+### 프로젝트 개발 시작
 1. **[QUICK_START_GUIDE.md](./QUICK_START_GUIDE.md)** 읽기 (10분)
    - 현재 상태 파악
    - 다음 액션 확인
@@ -52,6 +111,28 @@
    - 상세 구현 가이드
    - 코드 예제
    - 트러블슈팅
+
+### CI/CD 문제 해결 🔧
+
+**상황별 읽기 순서**:
+
+#### A. 배경부터 제대로 이해하고 싶다면:
+```
+1. CI_CD_REVIEW.md (현황 파악)
+   ↓
+2. CI_CD_IMPROVEMENT_GUIDE.md (문제점 & 해결책)
+   ↓
+3. CI_CD_TRANSITION_STRATEGY.md (실행 계획)
+   ↓
+4. CI_CD_QUICK_REFERENCE.md (실제 실행)
+```
+**총 소요 시간**: 약 80분 (읽기) + 30분 (실행)
+
+#### B. 빠르게 전환만 하고 싶다면:
+```
+CI_CD_QUICK_REFERENCE.md 만 보세요! ⚡
+```
+**총 소요 시간**: 5분 (읽기) + 30분 (실행)
 
 ---
 
@@ -110,8 +191,8 @@
 
 이 문서들은 프로젝트 진행에 따라 업데이트될 예정입니다.
 
-**마지막 업데이트**: 2026-01-19
-**다음 업데이트 예정**: Phase 1 완료 후
+**마지막 업데이트**: 2026-02-19
+**다음 업데이트 예정**: Phase 1 완료 후 또는 CI/CD 전환 후
 
 ---
 
