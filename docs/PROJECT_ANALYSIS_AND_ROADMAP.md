@@ -19,11 +19,11 @@
   - 네트워크 격리
 
 #### 2. 데이터 크롤링 (Web Scraping) - **90% 완료**
-- ✅ 네이버 뉴스 크롤링 모듈 (`crawling/news_crawling.py`)
-  - BeautifulSoup4 기반 HTML 파싱
-  - requests 라이브러리로 HTTP 요청
-  - 최근 7일 뉴스 필터링
-  - 환경변수로 검색 키워드 설정 가능
+- ✅ 네이버 뉴스 크롤링 모듈 (`crawling/naver_mcp_crawler.py`)
+    - Naver OpenAPI 기반 JSON 응답 처리
+    - requests 라이브러리로 HTTP 요청
+    - 다중 페이지 수집 지원
+    - 환경변수로 검색 키워드 설정 가능
 - ✅ 크롤링 데이터 DB 저장
   - 제목(title), URL 저장
   - 중복 처리 미흡 (개선 필요)
@@ -381,7 +381,7 @@ sentiment_analyzer = pipeline(
 ### 1️⃣ Phase 1 시작하기: LLM 요약 (최우선)
 
 #### Step 1: 본문 크롤링 추가
-**파일**: `crawling/news_crawling.py`
+**파일**: `crawling/naver_mcp_crawler.py`
 
 ```python
 def fetch_article_content(url: str) -> str:
@@ -868,7 +868,7 @@ open http://localhost:8501
 ## 🔧 기술 스택 추천 (Tech Stack Recommendations)
 
 ### 현재 스택 ✅
-- **크롤링**: BeautifulSoup4, requests
+- **크롤링**: Naver OpenAPI, requests
 - **DB**: PostgreSQL 15
 - **스케줄링**: Python schedule
 - **컨테이너**: Docker, Docker Compose
@@ -1025,7 +1025,7 @@ open http://localhost:8501
    - 마이그레이션 스크립트 작성
 
 2. **뉴스 본문 크롤링**
-   - `news_crawling.py`에 `fetch_article_content()` 함수 추가
+    - `news_crawling_mcp.py` 또는 `naver_mcp_crawler.py`에 본문 수집 로직 추가
    - 테스트: 본문이 DB에 제대로 저장되는지 확인
 
 3. **OpenAI API 계정 생성**

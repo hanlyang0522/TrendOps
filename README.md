@@ -234,7 +234,7 @@ docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 ### Day 1-2: 학습 및 기본 테스트
 - 학습:
-    - [ ] `requests`, `BeautifulSoup4` 사용법
+    - [ ] `requests`, Naver OpenAPI 사용법
     - [ ] PostgreSQL 기본 (`CREATE`, `INSERT`, `SELECT`)
 - 구현:
     - [ ] `docker pull postgres` 실행 및 접속

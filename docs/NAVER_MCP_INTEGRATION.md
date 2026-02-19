@@ -158,14 +158,12 @@ python -m pytest tests/test_naver_mcp_crawler.py -v
 ### 기존 방식 (BeautifulSoup)
 
 ```python
-# crawling/news_crawling.py
 import requests
-from bs4 import BeautifulSoup
 
 url = "https://search.naver.com/search.naver"
 response = requests.get(url, params=params)
-html = BeautifulSoup(response.text, "html.parser")
-articles = html.select('a[data-heatmap-target=".nav"]')
+html = response.text
+# HTML 파싱 및 선택자 의존
 ```
 
 **단점:**
@@ -242,10 +240,7 @@ echo $NAVER_CLIENT_SECRET
 
 2. **코드 변경**
    ```python
-   # 기존
-   from crawling.news_crawling import main
-
-   # 새로운 방식
+   # MCP 기반 방식
    from crawling.news_crawling_mcp import main
    ```
 

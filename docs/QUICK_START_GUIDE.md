@@ -42,7 +42,7 @@ https://platform.openai.com/
 # 2. .env에 추가
 echo "OPENAI_API_KEY=sk-..." >> .env
 
-# 3. 본문 크롤링 추가 (crawling/news_crawling.py 수정)
+# 3. 본문 크롤링 추가 (crawling/news_crawling_mcp.py 확장)
 # 4. DB 스키마 변경 (migrations/001_add_content_column.sql)
 # 5. summarizer/openai_summarizer.py 작성
 ```
@@ -94,7 +94,7 @@ open http://localhost:8501
 
 ### Step 1: 본문 크롤링
 ```python
-# crawling/news_crawling.py 에 추가
+# crawling/news_crawling_mcp.py 또는 crawling/naver_mcp_crawler.py 에 추가
 
 def fetch_article_content(url: str) -> str:
     """뉴스 본문 크롤링"""
