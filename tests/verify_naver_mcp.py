@@ -241,7 +241,9 @@ def main():
         print(f"{name:20s}: {status}")
 
     print("\n" + "=" * 60)
-    print(f"총 {len(results)}개 테스트: {passed}개 통과, {failed}개 실패, {skipped}개 건너뜀")
+    print(
+        f"총 {len(results)}개 테스트: {passed}개 통과, {failed}개 실패, {skipped}개 건너뜀"
+    )
     print("=" * 60)
 
     if failed == 0:

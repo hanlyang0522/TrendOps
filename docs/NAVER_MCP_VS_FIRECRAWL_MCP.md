@@ -1,6 +1,6 @@
 # Naver MCP vs Firecrawl MCP 비교 분석
 
-**작성일**: 2026-02-09  
+**작성일**: 2026-02-09
 **목적**: TrendOps 프로젝트를 위한 Naver MCP와 Firecrawl MCP 상세 비교
 
 ---
@@ -72,7 +72,7 @@
 
 ### Firecrawl MCP
 ```
-무료 플랜: 
+무료 플랜:
 - 500 크레딧/월 (약 500 페이지)
 - 1 크레딧 = 1 페이지
 
@@ -298,7 +298,7 @@ def crawl_naver_news(keyword, start_date=None, end_date=None):
         display=30,
         sort="date"
     )
-    
+
     # 필요시 본문 추출
     if need_full_content:
         detailed = search_news_detail(
@@ -306,7 +306,7 @@ def crawl_naver_news(keyword, start_date=None, end_date=None):
             display=10,
             include_content=True
         )
-    
+
     return results
 ```
 
@@ -314,7 +314,7 @@ def crawl_naver_news(keyword, start_date=None, end_date=None):
 
 ### Phase 2: Firecrawl MCP 추가 (선택적)
 
-**조건:** 
+**조건:**
 - Naver 외 다른 뉴스 사이트 필요 시
 - 예산 확보 ($20/월)
 
@@ -421,17 +421,17 @@ results = search_news(
 - Naver MCP 대비 이점 없음
 
 ### Q3: 상업적으로 사용하려면?
-**A**: 
+**A**:
 - **Naver MCP**: Naver OpenAPI 상업용 라이선스 필요
 - **Firecrawl MCP**: 상업용 사용 가능 (플랜에 따라)
 
 ### Q4: 크롤링 속도 차이는?
-**A**: 
+**A**:
 - **Naver MCP**: ~1초 (API 호출)
 - **Firecrawl MCP**: ~5-10초 (페이지 렌더링)
 
 ### Q5: 데이터 품질은?
-**A**: 
+**A**:
 - **Naver MCP**: 구조화된 JSON, 일관된 형식
 - **Firecrawl MCP**: 추출 결과 변동 가능, AI 기반 정제
 
@@ -443,7 +443,7 @@ results = search_news(
 
 **단계별 접근:**
 
-**Phase 1 (즉시):** **Naver MCP** 
+**Phase 1 (즉시):** **Naver MCP**
 - ✅ 무료
 - ✅ Naver 뉴스 완벽 지원
 - ✅ 요구사항 충족
@@ -464,6 +464,6 @@ results = search_news(
 
 ---
 
-**문서 업데이트:** 2026-02-09  
-**작성자:** GitHub Copilot  
+**문서 업데이트:** 2026-02-09
+**작성자:** GitHub Copilot
 **버전:** 1.0

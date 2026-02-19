@@ -1,6 +1,6 @@
 # MCP 뉴스 크롤링 서비스 조사 보고서
 
-**작성일**: 2026-02-09  
+**작성일**: 2026-02-09
 **목적**: TrendOps 프로젝트에 적용 가능한 MCP 기반 뉴스 크롤링 서비스 조사
 
 ---
@@ -20,7 +20,7 @@
 
 ### 1. mcp-naver-news ⭐ **[최고 추천]**
 
-**GitHub**: https://github.com/justcoding-ys/mcp-naver-news  
+**GitHub**: https://github.com/justcoding-ys/mcp-naver-news
 **PyPI**: `pip install mcp-naver-news`
 
 #### 특징
@@ -69,7 +69,7 @@ results = search_news(
 
 ### 2. news-mcp-server
 
-**PyPI**: `pip install news-mcp-server`  
+**PyPI**: `pip install news-mcp-server`
 **문서**: https://pypi.org/project/news-mcp-server/
 
 #### 특징
@@ -118,7 +118,7 @@ async with NewsMCPClient() as client:
 
 ### 3. mcp-server-rss
 
-**PyPI**: `pip install mcp-server-rss`  
+**PyPI**: `pip install mcp-server-rss`
 **문서**: https://pypi.org/project/mcp-server-rss/
 
 #### 특징

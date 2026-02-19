@@ -184,17 +184,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      
+
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: '3.12'
-      
+
       - name: Install dependencies
         run: |
           pip install pytest pytest-mock
           pip install -r requirements.txt  # 필요 시
-      
+
       - name: Run tests
         run: |
           python -m pytest tests/ -v -k "not Integration"
@@ -216,7 +216,7 @@ class TestNewFeature:
         feature = NewFeature()
         result = feature.do_something()
         assert result == expected_value
-    
+
     @pytest.mark.skipif(
         not os.getenv("API_KEY"),
         reason="API key not available"
@@ -230,5 +230,5 @@ class TestNewFeature:
 
 ---
 
-**최종 업데이트:** 2026-02-10  
+**최종 업데이트:** 2026-02-10
 **테스트 통과율:** 100% (11/11)

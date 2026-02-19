@@ -39,7 +39,7 @@ SORT_ORDER=date          # 정렬 방식: 'date' 또는 'sim' (기본값: date)
 1. **애플리케이션 이름**: TrendOps (또는 원하는 이름)
 2. **사용 API**: "검색" 선택
    - 뉴스 검색 API 체크
-3. **비로그인 오픈 API 서비스 환경**: 
+3. **비로그인 오픈 API 서비스 환경**:
    - 웹 서비스 URL: http://localhost (개발용)
 4. 등록 완료
 
@@ -244,7 +244,7 @@ echo $X_NAVER_CLIENT_SECRET
    ```python
    # 기존
    from crawling.news_crawling import main
-   
+
    # 새로운 방식
    from crawling.news_crawling_mcp import main
    ```
@@ -283,5 +283,5 @@ echo $X_NAVER_CLIENT_SECRET
 
 ---
 
-**문서 작성일**: 2026-02-10  
+**문서 작성일**: 2026-02-10
 **최종 업데이트**: 2026-02-10

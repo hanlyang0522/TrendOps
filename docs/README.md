@@ -17,7 +17,7 @@
   - 각 서비스별 특징, 장단점, 구현 방법
   - TrendOps 프로젝트 적용 권장사항
 
-### 2. [Naver MCP vs Firecrawl MCP 비교 분석](./NAVER_MCP_VS_FIRECRAWL_MCP.md) 
+### 2. [Naver MCP vs Firecrawl MCP 비교 분석](./NAVER_MCP_VS_FIRECRAWL_MCP.md)
 - **목적**: Naver MCP와 Firecrawl MCP 상세 비교
 - **내용**:
   - 두 서비스의 핵심 차이점
@@ -123,7 +123,7 @@
 
 ---
 
-**최종 업데이트:** 2026-02-09  
+**최종 업데이트:** 2026-02-09
 **작성자:** GitHub Copilot
 # TrendOps Documentation
 
