@@ -25,7 +25,7 @@ def run_crawler():
     try:
         logger.info("Starting news crawler...")
         result = subprocess.run(
-            ["python", "-m", "crawling.news_crawling"],
+            ["python", "-m", "crawling.news_crawling_mcp"],
             cwd="/app",
             capture_output=True,
             text=True,

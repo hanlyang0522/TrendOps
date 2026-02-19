@@ -34,4 +34,4 @@ COPY scripts/wait-for-postgres.sh ./
 RUN chmod +x wait-for-postgres.sh
 
 # Run crawler
-CMD ["./wait-for-postgres.sh", "postgres", "python", "-m", "crawling.news_crawling"]
+CMD ["./wait-for-postgres.sh", "postgres", "python", "-m", "crawling.news_crawling_mcp"]

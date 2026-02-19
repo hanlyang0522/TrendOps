@@ -38,8 +38,8 @@ python -m pytest tests/test_naver_mcp_crawler.py -v
 python -m pytest tests/test_naver_mcp_crawler.py -v -k "not Integration"
 
 # 통합 테스트 포함 (환경 변수 필요)
-export X_NAVER_CLIENT_ID=your_id
-export X_NAVER_CLIENT_SECRET=your_secret
+export NAVER_CLIENT_ID=your_id
+export NAVER_CLIENT_SECRET=your_secret
 python -m pytest tests/test_naver_mcp_crawler.py -v
 ```
 
@@ -66,8 +66,8 @@ Naver MCP 통합이 올바르게 완료되었는지 종합적으로 검증하는
 python tests/verify_naver_mcp.py
 
 # 실제 API 검증 포함 (환경 변수 필요)
-export X_NAVER_CLIENT_ID=your_id
-export X_NAVER_CLIENT_SECRET=your_secret
+export NAVER_CLIENT_ID=your_id
+export NAVER_CLIENT_SECRET=your_secret
 python tests/verify_naver_mcp.py
 ```
 
@@ -81,7 +81,7 @@ python tests/verify_naver_mcp.py
 
 💡 실제 API 테스트를 위해 환경 변수를 설정하세요:
    1. https://developers.naver.com/ 에서 API 키 발급
-   2. .env 파일에 X_NAVER_CLIENT_ID, X_NAVER_CLIENT_SECRET 설정
+   2. .env 파일에 NAVER_CLIENT_ID, NAVER_CLIENT_SECRET 설정
    3. 이 스크립트 다시 실행
 ```
 
@@ -107,8 +107,8 @@ python tests/verify_naver_mcp.py
 
 ```bash
 # 환경 변수 설정
-export X_NAVER_CLIENT_ID=your_client_id
-export X_NAVER_CLIENT_SECRET=your_client_secret
+export NAVER_CLIENT_ID=your_client_id
+export NAVER_CLIENT_SECRET=your_client_secret
 
 # 통합 테스트 포함 실행
 python -m pytest tests/ -v
@@ -155,12 +155,12 @@ pytest tests/ -v
 
 ```bash
 # 환경 변수 확인
-echo $X_NAVER_CLIENT_ID
-echo $X_NAVER_CLIENT_SECRET
+echo $NAVER_CLIENT_ID
+echo $NAVER_CLIENT_SECRET
 
 # 설정
-export X_NAVER_CLIENT_ID=your_id
-export X_NAVER_CLIENT_SECRET=your_secret
+export NAVER_CLIENT_ID=your_id
+export NAVER_CLIENT_SECRET=your_secret
 ```
 
 ## 📖 관련 문서

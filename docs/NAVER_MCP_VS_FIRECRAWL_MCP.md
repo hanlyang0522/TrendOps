@@ -280,8 +280,8 @@ pip install mcp-naver-news
 **Step 3: 환경 변수 설정**
 ```bash
 # .env 파일
-X_NAVER_CLIENT_ID=your_client_id
-X_NAVER_CLIENT_SECRET=your_client_secret
+NAVER_CLIENT_ID=your_client_id
+NAVER_CLIENT_SECRET=your_client_secret
 ```
 
 **Step 4: 코드 통합**

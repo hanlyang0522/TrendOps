@@ -51,8 +51,8 @@
 pip install mcp-naver-news
 
 # 환경 변수 설정
-export X_NAVER_CLIENT_ID="your_client_id"
-export X_NAVER_CLIENT_SECRET="your_client_secret"
+export NAVER_CLIENT_ID="your_client_id"
+export NAVER_CLIENT_SECRET="your_client_secret"
 
 # 사용 예시
 from mcp_naver_news import search_news

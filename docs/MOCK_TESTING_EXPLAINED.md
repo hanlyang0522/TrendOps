@@ -136,7 +136,7 @@ class TestNaverMCPCrawler:
 
 ```python
 @pytest.mark.skipif(
-    not os.getenv("X_NAVER_CLIENT_ID"),
+    not os.getenv("NAVER_CLIENT_ID"),
     reason="Naver OpenAPI credentials not available"
 )
 class TestNaverMCPCrawlerIntegration:
@@ -190,8 +190,8 @@ python -m pytest tests/test_naver_mcp_crawler.py -v -k "not Integration"
 
 ```bash
 # 환경 변수 설정
-export X_NAVER_CLIENT_ID=your_client_id
-export X_NAVER_CLIENT_SECRET=your_client_secret
+export NAVER_CLIENT_ID=your_client_id
+export NAVER_CLIENT_SECRET=your_client_secret
 
 # 전체 테스트 실행
 python -m pytest tests/test_naver_mcp_crawler.py -v
@@ -380,8 +380,8 @@ python -m pytest tests/test_naver_mcp_crawler.py -v -k "not Integration"
 
 ### 3. 통합 테스트 실행하기
 ```bash
-export X_NAVER_CLIENT_ID=발급받은_ID
-export X_NAVER_CLIENT_SECRET=발급받은_SECRET
+export NAVER_CLIENT_ID=발급받은_ID
+export NAVER_CLIENT_SECRET=발급받은_SECRET
 python -m pytest tests/test_naver_mcp_crawler.py -v
 ```
 
