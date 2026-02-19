@@ -65,7 +65,15 @@ make status
 ## 🛠️ 환경 설정
 
 ### 환경 변수 (`.env` 파일)
+
+**중요**: Naver OpenAPI 자격 증명이 필요합니다!
+
 ```bash
+# Naver OpenAPI (필수!)
+# https://developers.naver.com/에서 발급
+X_NAVER_CLIENT_ID=your_naver_client_id_here
+X_NAVER_CLIENT_SECRET=your_naver_client_secret_here
+
 # Database
 POSTGRES_HOST=postgres
 POSTGRES_DB=postgres
@@ -74,11 +82,20 @@ POSTGRES_PASSWORD=pg1234
 
 # Crawler
 SEARCH_KEYWORD=당근마켓
-CRAWL_SCHEDULE=09:00
+MAX_PAGES=3
+SORT_ORDER=date
 
 # Scheduler
+CRAWL_SCHEDULE=0 9 * * *  # 매일 09:00
 RUN_ON_START=true  # 시작 시 즉시 실행
 ```
+
+### Naver OpenAPI 설정 방법
+
+1. [Naver Developers](https://developers.naver.com/)에 접속
+2. 애플리케이션 등록 (https://developers.naver.com/apps/#/register)
+3. "검색" API 활성화
+4. Client ID와 Client Secret을 `.env` 파일에 입력
 
 ## 🧪 개발 및 테스트
 
@@ -136,8 +153,8 @@ make up
 # 크롤러 컨테이너 내부 접속
 docker-compose exec crawler /bin/bash
 
-# 한 번만 크롤링 실행
-docker-compose run --rm crawler python -m crawling.news_crawling
+# 한 번만 크롤링 실행 (API 버전)
+docker-compose run --rm crawler python -m crawling.news_crawling_mcp
 ```
 
 ## 🔒 보안 설정
@@ -149,7 +166,8 @@ docker-compose run --rm crawler python -m crawling.news_crawling
 cp .env.example .env
 
 # 2. .env 파일에서 보안 정보 수정
-# POSTGRES_PASSWORD를 강력한 패스워드로 변경하세요!
+# - POSTGRES_PASSWORD를 강력한 패스워드로 변경
+# - X_NAVER_CLIENT_ID와 X_NAVER_CLIENT_SECRET 입력 (https://developers.naver.com/)
 nano .env  # 또는 선호하는 에디터 사용
 ```
 
@@ -170,6 +188,7 @@ docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 ### 보안 체크리스트
 
 - [ ] `.env` 파일에서 기본 패스워드 변경
+- [ ] Naver OpenAPI 자격 증명 입력 (https://developers.naver.com/)
 - [ ] 프로덕션에서는 SSL/TLS 연결 사용
 - [ ] 정기적인 보안 업데이트 적용
 - [ ] 로그 모니터링 설정
