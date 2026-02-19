@@ -9,7 +9,7 @@
 
 ### ✅ 완료
 - Docker 컨테이너화
-- 네이버 뉴스 크롤링
+- 네이버 뉴스 API (MCP) 연동
 - PostgreSQL 데이터베이스
 - 스케줄링 (매일 09:00)
 
@@ -59,7 +59,7 @@ make status
 
 - **PostgreSQL**: 뉴스 데이터 저장소 (포트: 5432)
 - **DB Init**: 데이터베이스 초기 설정
-- **Crawler**: 뉴스 크롤링 서비스
+- **Crawler**: 네이버 뉴스 API (MCP) 기반 뉴스 수집 서비스
 - **Scheduler**: 주기적 크롤링 실행 (매일 09:00)
 
 ## 🛠️ 환경 설정
@@ -72,6 +72,10 @@ POSTGRES_DB=postgres
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=pg1234
 
+# Naver News API
+NAVER_CLIENT_ID=your_naver_client_id_here
+NAVER_CLIENT_SECRET=your_naver_client_secret_here
+
 # Crawler
 SEARCH_KEYWORD=당근마켓
 CRAWL_SCHEDULE=09:00
@@ -79,6 +83,12 @@ CRAWL_SCHEDULE=09:00
 # Scheduler
 RUN_ON_START=true  # 시작 시 즉시 실행
 ```
+
+**Naver API 인증 정보 획득 방법:**
+1. [네이버 개발자 센터](https://developers.naver.com/) 방문
+2. 애플리케이션 등록
+3. 뉴스 검색 API 사용 신청
+4. Client ID와 Client Secret을 `.env` 파일에 설정
 
 ## 🧪 개발 및 테스트
 
@@ -183,9 +193,9 @@ docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 - 배경: 취준하면서 자소서 쓸때 기업 산업트렌드 분석을 반복하며 관련 서비스가 있으면 좋겠다고 느낌
 
 - 시퀀스
-    1. 매일 1번씩 국내 대기업 관련 뉴스를 크롤링
-        - 주기적으로 크롤링하다 ip차단될 경우 존재?
-    2. 매주 1번씩 크롤링된 데이터에서 정보를 요약함
+    1. 매일 1번씩 국내 대기업 관련 뉴스를 수집 (네이버 뉴스 API 사용)
+        - API 기반으로 안정적이고 안전한 데이터 수집
+    2. 매주 1번씩 수집된 데이터에서 정보를 요약함
         - 구현 어떻게 할지… ML적으로 어떻게 풀지?
         - 원본 데이터를 모두 저장하고 → 요약하고 → 그걸로 새로운 데이터 생성
     3. 등록된 사용자에게 요약된 정보를 메일로 전달
@@ -194,7 +204,7 @@ docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 - 서비스 분리
     1. 크롤링
-        - `selenium`
+        - `Naver News API (MCP)` - API 기반 뉴스 수집
     2. api 서버: steamlit(ui, 웹사이트와의 통신)
         - `fastAPI`
     3. ML: 실제로 데이터 요약하고 생성
