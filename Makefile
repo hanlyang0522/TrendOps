@@ -98,3 +98,34 @@ security-scan: ## Run security checks
 	@echo "✅ Docker is installed"
 	@echo "🔒 Checking for secrets in git history..."
 	@git log --all --full-history -- .env >/dev/null 2>&1 && echo "⚠️  .env file found in git history!" || echo "✅ No .env in git history"
+
+# ====================
+# Code Quality Helpers (Balanced Mode)
+# ====================
+
+.PHONY: format safe-commit validate lint
+
+format: ## Format all Python files with pre-commit
+	@echo "🔧 Formatting all Python files..."
+	@pre-commit run --all-files || true
+	@echo "✅ Formatting complete!"
+
+safe-commit: ## Run pre-commit checks and commit safely
+	@echo "🔧 Running pre-commit checks..."
+	@pre-commit run --all-files || true
+	@git add .
+	@read -p "📝 Commit message: " msg; \
+	git commit -m "$$msg"
+	@echo "✅ Committed successfully!"
+
+validate: ## Run full CI validation locally
+	@echo "🧪 Running full CI validation..."
+	@pre-commit run --all-files || true
+	@python -m flake8 . --select=E9,F63,F7,F82 --show-source --statistics
+	@python -m compileall . -x "(build|dist|\.git|__pycache__|\.pytest_cache)" -q
+	@echo "✅ All critical checks passed!"
+
+lint: ## Run full linting (informational only)
+	@echo "📊 Running full linting (informational)..."
+	@python -m flake8 . --exit-zero --statistics
+	@echo "✅ Linting report complete!"

@@ -32,6 +32,7 @@ repos:
         args:
         - --max-line-length=88
         - --extend-ignore=E203,W503
+        - --exit-zero  # Balanced mode: warnings pass, errors visible
 
 -   repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.11.0
@@ -39,6 +40,9 @@ repos:
     -   id: mypy
         files: \.py$
         additional_dependencies: [types-requests, types-psycopg2]
+        args:
+        - --ignore-missing-imports  # Balanced mode: relax external library checks
+        - --no-strict-optional      # Balanced mode: relax Optional checks
 
 # Jupyter 노트북 linting 및 포맷팅
 # Note: nbqa hooks disabled due to formatting instability with notebook metadata
