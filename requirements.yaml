@@ -74,7 +74,6 @@ dependencies:
   - pip:
       - astroid==4.0.1
       - autopep8==2.3.2
-      - beautifulsoup4==4.14.2
       - black==25.9.0
       - charset-normalizer==3.4.4
       - click==8.3.0
@@ -95,7 +94,6 @@ dependencies:
       - pytokens==0.2.0
       - pytz==2025.2
       - requests==2.32.5
-      - soupsieve==2.8
       - tokenize-rt==6.2.0
       - tomli==2.3.0
       - tomlkit==0.13.3

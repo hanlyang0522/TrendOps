@@ -204,7 +204,7 @@ mcp-server-rss --host 0.0.0.0 --port 8000
 ### Phase 2: mcp-naver-news 통합
 1. `mcp-naver-news` 패키지 설치
 2. 환경 변수 설정 (`.env` 파일)
-3. 기존 `crawling/news_crawling.py` 리팩토링
+3. 기존 크롤링 로직을 `crawling/news_crawling_mcp.py` 기준으로 리팩토링
 4. MCP 기반 크롤링으로 전환
 
 ### Phase 3: 테스트 및 검증
