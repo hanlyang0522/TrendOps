@@ -26,36 +26,3 @@ jobs:
             git push origin develop
             echo "✅ develop branch created from main successfully"
           fi
-
-      # Requires a PAT with repo (admin) scope stored as REPO_ADMIN_PAT secret.
-      # Settings → Secrets and variables → Actions → New repository secret
-      # Name: REPO_ADMIN_PAT  |  Value: <PAT with repo scope>
-      - name: Protect develop branch (require PR, no direct pushes)
-        env:
-          GH_TOKEN: ${{ secrets.REPO_ADMIN_PAT }}
-        run: |
-          if [ -z "$GH_TOKEN" ]; then
-            echo "⚠️  REPO_ADMIN_PAT secret is not set."
-            echo "    Add a PAT with 'repo' (admin) scope as REPO_ADMIN_PAT to enable automatic branch protection."
-            echo "    Until then, protect the develop branch manually in Settings → Branches."
-            exit 0
-          fi
-          echo "🔒 Applying branch protection to develop..."
-          gh api repos/${{ github.repository }}/branches/develop/protection \
-            --method PUT \
-            --header "Accept: application/vnd.github+json" \
-            --input - <<'EOF'
-          {
-            "required_status_checks": null,
-            "enforce_admins": true,
-            "required_pull_request_reviews": {
-              "required_approving_review_count": 1,
-              "dismiss_stale_reviews": false,
-              "require_code_owner_reviews": false
-            },
-            "restrictions": null,
-            "allow_force_pushes": false,
-            "allow_deletions": false
-          }
-          EOF
-          echo "✅ develop branch is now protected"
