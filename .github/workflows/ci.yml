@@ -9,6 +9,8 @@ on:
 jobs:
   quality-check:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     services:
       postgres:
