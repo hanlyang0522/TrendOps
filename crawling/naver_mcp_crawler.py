@@ -223,9 +223,7 @@ def main():
 
     except ValueError as e:
         print(f"설정 오류: {e}")
-        print(
-            "\n환경 변수를 확인하세요:" "\n  NAVER_CLIENT_ID" "\n  NAVER_CLIENT_SECRET"
-        )
+        print("\n환경 변수를 확인하세요:\n  NAVER_CLIENT_ID\n  NAVER_CLIENT_SECRET")
     except Exception as e:
         print(f"크롤링 중 오류 발생: {e}")
 
