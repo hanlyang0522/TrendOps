@@ -67,7 +67,7 @@ jobs:
       run: |
         conda activate TrendOps
         pre-commit run --all-files || true
-        
+
     - name: Auto-commit formatting fixes
       if: github.event_name == 'push'
       run: |

@@ -232,5 +232,5 @@ make lint  # 차단하지 않고 정보만 표시
 
 ---
 
-**자세한 설명**: [CI_CD_TRANSITION_STRATEGY.md](./CI_CD_TRANSITION_STRATEGY.md)  
+**자세한 설명**: [CI_CD_TRANSITION_STRATEGY.md](./CI_CD_TRANSITION_STRATEGY.md)
 **배경 설명**: [CI_CD_IMPROVEMENT_GUIDE.md](./CI_CD_IMPROVEMENT_GUIDE.md)
