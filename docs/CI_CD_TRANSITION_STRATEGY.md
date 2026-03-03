@@ -1,6 +1,6 @@
 # CI/CD Balanced Mode 전환 전략
 
-> **작성일**: 2026-02-19  
+> **작성일**: 2026-02-19
 > **목적**: Strict Mode → Balanced Mode 안전한 전환 가이드
 
 ---
@@ -33,7 +33,7 @@
 
 ### 전략 개요
 
-**핵심 원칙**: 
+**핵심 원칙**:
 1. **백지화 불필요** - 기존 코드는 이미 strict mode를 통과하므로 balanced mode도 통과
 2. **Single Commit 전환** - 모든 설정을 한 번에 변경하여 일관성 유지
 3. **CI Skip 활용** - 전환 커밋만 CI 체크 우회
@@ -222,7 +222,7 @@ jobs:
       run: |
         conda activate TrendOps
         pre-commit run --all-files || true
-        
+
     # ⭐ Balanced Mode: Auto-commit fixes if any
     - name: Auto-commit formatting fixes
       if: github.event_name == 'push'
@@ -386,7 +386,7 @@ git commit -m "docs: confirm balanced mode CI is working"
 git push origin feature/balanced-mode-ci
 ```
 
-**예상 결과**: 
+**예상 결과**:
 - ✅ Pre-commit이 실행되고 자동으로 수정 (있다면)
 - ✅ CI가 실행되고 통과
 - ✅ Warning은 표시되지만 CI 성공
@@ -537,5 +537,5 @@ no_strict_optional = true
 
 ---
 
-**작성일**: 2026-02-19  
+**작성일**: 2026-02-19
 **최종 업데이트**: 2026-02-19
