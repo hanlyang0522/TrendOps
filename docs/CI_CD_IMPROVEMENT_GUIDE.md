@@ -1,6 +1,6 @@
 # CI/CD 룰 검토 및 개선 가이드
 
-> **작성일**: 2026-02-10  
+> **작성일**: 2026-02-10
 > **요청 사항**: CI/CD 경험을 위해 추가한 룰이 계속 formatting 실패를 일으켜 생산성을 떨어트림. 현업 수준과 비교 분석 및 개선 방안 제시.
 
 ---
@@ -75,7 +75,7 @@
 #### `.pre-commit-config.yaml` 분석:
 ```yaml
 ✅ check-yaml               # 기본 hygiene
-✅ end-of-file-fixer        # 기본 hygiene  
+✅ end-of-file-fixer        # 기본 hygiene
 ✅ trailing-whitespace      # 기본 hygiene
 ✅ black                    # Formatting (강제)
 ✅ isort                    # Import sorting (강제)
@@ -208,7 +208,7 @@
   run: |
     conda activate TrendOps
     pre-commit run --all-files || true
-    
+
     # 변경사항이 있으면 자동 커밋
     if [[ -n $(git status --porcelain) ]]; then
       git config user.name "github-actions[bot]"
@@ -404,11 +404,11 @@ def get_connection() -> psycopg2.extensions.connection:
 # ✅ GOOD - Generate code like this
 def fetch_news(keyword: str, limit: int = 10) -> list[dict[str, str]]:
     """Fetch news articles from Naver.
-    
+
     Args:
         keyword: Search keyword
         limit: Maximum number of articles
-        
+
     Returns:
         List of article dictionaries
     """
@@ -438,7 +438,7 @@ $ git commit -m "feat: add feature"
 ❌ black............................Failed
    - hook id: black
    - files were modified by this hook
-   
+
 ❌ isort............................Failed
    - hook id: isort
    - files were modified by this hook
@@ -503,7 +503,7 @@ make validate      # CI 미리 확인
   run: |
     conda activate TrendOps
     pre-commit run --all-files || true
-    
+
 - name: Commit formatting fixes
   if: always()
   run: |
@@ -787,8 +787,8 @@ EOF
 
 ---
 
-**작성자**: GitHub Copilot (AI Assistant)  
-**마지막 업데이트**: 2026-02-10  
+**작성자**: GitHub Copilot (AI Assistant)
+**마지막 업데이트**: 2026-02-10
 **관련 문서**:
 - `docs/CI_CD_REVIEW.md` - CI/CD 설정 상세 리뷰
 - `.github/copilot-instructions.md` - Copilot 사용 가이드
