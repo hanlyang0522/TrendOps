@@ -1,0 +1,30 @@
+name: Sync develop branch
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  ensure-develop-exists:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create develop branch from main if it does not exist
+        run: |
+          git fetch --all
+          if git ls-remote --heads origin develop | grep -q develop; then
+            echo "✅ develop branch already exists"
+          else
+            echo "🔧 Creating develop branch from main..."
+            git checkout -b develop
+            git push origin develop
+            echo "✅ develop branch created from main successfully"
+          fi
