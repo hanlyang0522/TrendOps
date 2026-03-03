@@ -1,5 +1,28 @@
 # TrendOps: LLM 기반 산업 트렌드 요약 서비스
 
+> 📖 **프로젝트 분석 및 개발 가이드**: [docs/QUICK_START_GUIDE.md](docs/QUICK_START_GUIDE.md)
+> 📊 **상세 로드맵**: [docs/PROJECT_ANALYSIS_AND_ROADMAP.md](docs/PROJECT_ANALYSIS_AND_ROADMAP.md)
+
+## 🎯 프로젝트 현황
+
+**진행도**: 35-40% | **현재 단계**: Phase 1 준비 완료 (크롤링 + DB + 스케줄링)
+
+### ✅ 완료
+- Docker 컨테이너화
+- 네이버 뉴스 크롤링
+- PostgreSQL 데이터베이스
+- 스케줄링 (매일 09:00)
+
+### 🚧 다음 단계
+1. **Phase 1 (최우선)**: LLM 기반 뉴스 요약
+2. **Phase 2**: Streamlit 웹 UI
+3. **Phase 3**: 사용자 관리
+4. **Phase 4**: 이메일 알림
+
+자세한 내용은 [개발 가이드](docs/QUICK_START_GUIDE.md)를 참고하세요.
+
+---
+
 ## 🚀 Quick Start (Docker)
 
 ### 전체 시스템 실행
@@ -42,7 +65,15 @@ make status
 ## 🛠️ 환경 설정
 
 ### 환경 변수 (`.env` 파일)
+
+**중요**: Naver OpenAPI 자격 증명이 필요합니다!
+
 ```bash
+# Naver OpenAPI (필수!)
+# https://developers.naver.com/에서 발급
+NAVER_CLIENT_ID=your_naver_client_id_here
+NAVER_CLIENT_SECRET=your_naver_client_secret_here
+
 # Database
 POSTGRES_HOST=postgres
 POSTGRES_DB=postgres
@@ -51,11 +82,20 @@ POSTGRES_PASSWORD=pg1234
 
 # Crawler
 SEARCH_KEYWORD=당근마켓
-CRAWL_SCHEDULE=09:00
+MAX_PAGES=3
+SORT_ORDER=date
 
 # Scheduler
+CRAWL_SCHEDULE=0 9 * * *  # 매일 09:00
 RUN_ON_START=true  # 시작 시 즉시 실행
 ```
+
+### Naver OpenAPI 설정 방법
+
+1. [Naver Developers](https://developers.naver.com/)에 접속
+2. 애플리케이션 등록 (https://developers.naver.com/apps/#/register)
+3. "검색" API 활성화
+4. Client ID와 Client Secret을 `.env` 파일에 입력
 
 ## 🧪 개발 및 테스트
 
@@ -113,8 +153,8 @@ make up
 # 크롤러 컨테이너 내부 접속
 docker-compose exec crawler /bin/bash
 
-# 한 번만 크롤링 실행
-docker-compose run --rm crawler python -m crawling.news_crawling
+# 한 번만 크롤링 실행 (API 버전)
+docker-compose run --rm crawler python -m crawling.news_crawling_mcp
 ```
 
 ## 🔒 보안 설정
@@ -126,7 +166,8 @@ docker-compose run --rm crawler python -m crawling.news_crawling
 cp .env.example .env
 
 # 2. .env 파일에서 보안 정보 수정
-# POSTGRES_PASSWORD를 강력한 패스워드로 변경하세요!
+# - POSTGRES_PASSWORD를 강력한 패스워드로 변경
+# - NAVER_CLIENT_ID와 NAVER_CLIENT_SECRET 입력 (https://developers.naver.com/)
 nano .env  # 또는 선호하는 에디터 사용
 ```
 
@@ -147,6 +188,7 @@ docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 ### 보안 체크리스트
 
 - [ ] `.env` 파일에서 기본 패스워드 변경
+- [ ] Naver OpenAPI 자격 증명 입력 (https://developers.naver.com/)
 - [ ] 프로덕션에서는 SSL/TLS 연결 사용
 - [ ] 정기적인 보안 업데이트 적용
 - [ ] 로그 모니터링 설정
@@ -192,7 +234,7 @@ docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 ### Day 1-2: 학습 및 기본 테스트
 - 학습:
-    - [ ] `requests`, `BeautifulSoup4` 사용법
+    - [ ] `requests`, Naver OpenAPI 사용법
     - [ ] PostgreSQL 기본 (`CREATE`, `INSERT`, `SELECT`)
 - 구현:
     - [ ] `docker pull postgres` 실행 및 접속
@@ -277,3 +319,7 @@ docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
     - [ ] (Optional) `scheduler`가 `emailer.py`도 실행하도록 추가
 
 🏁 최종 마일스톤: 누구나 `README.md`를 보고 프로젝트를 손쉽게 실행할 수 있음
+
+✅ **CI/CD Balanced Mode 적용 완료** (2026-02-19)
+- 📊 [검증 요약](docs/BALANCED_MODE_SUMMARY.md) - 100% 완료, 모든 기준 충족
+- 📋 [상세 검증 보고서](docs/BALANCED_MODE_REVIEW_REPORT.md) - 세부 검증 내역

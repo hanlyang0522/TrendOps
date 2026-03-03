@@ -12,10 +12,8 @@ warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true
 
-[tool.nbqa.config]
-black = "pyproject.toml"
-isort = "pyproject.toml"
-flake8 = ".flake8"
+# Note: nbqa configuration removed as nbqa hooks are disabled in .pre-commit-config.yaml
+# Notebooks are for development/exploration and don't require strict formatting enforcement
 
 # Pylint는 .pylintrc 파일을 따로 사용하거나 여기에 설정할 수 있습니다.
 # [tool.pylint.master]

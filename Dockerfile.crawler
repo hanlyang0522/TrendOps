@@ -16,7 +16,6 @@ COPY pyproject.toml ./
 RUN pip install --no-cache-dir \
     psycopg2-binary \
     requests \
-    beautifulsoup4 \
     lxml
 
 # Copy source code
@@ -34,4 +33,4 @@ COPY scripts/wait-for-postgres.sh ./
 RUN chmod +x wait-for-postgres.sh
 
 # Run crawler
-CMD ["./wait-for-postgres.sh", "postgres", "python", "-m", "crawling.news_crawling"]
+CMD ["./wait-for-postgres.sh", "postgres", "python", "-m", "crawling.news_crawling_mcp"]
