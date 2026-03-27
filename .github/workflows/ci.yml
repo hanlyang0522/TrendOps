@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  lint:
+    name: Lint & Syntax Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install linting tools
+        run: pip install flake8
+
+      - name: Check for critical errors (flake8)
+        run: |
+          flake8 . \
+            --select=E9,F63,F7,F82 \
+            --exclude=.git,__pycache__,.pytest_cache,.venv,venv,*.ipynb_checkpoints
+
+      - name: Check Python syntax (compileall)
+        run: |
+          python -m compileall . \
+            -x '\.git|__pycache__|\.pytest_cache|\.venv|venv'
