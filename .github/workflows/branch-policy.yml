@@ -1,0 +1,55 @@
+name: Enforce Branch Source Policy
+
+on:
+  create:
+
+jobs:
+  check-branch-source:
+    if: github.ref_type == 'branch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Block branches created from main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          NEW_BRANCH="${GITHUB_REF_NAME}"
+
+          # Skip the protected branches themselves
+          if [ "$NEW_BRANCH" = "main" ] || [ "$NEW_BRANCH" = "develop" ]; then
+            echo "Protected branch — skipping policy check."
+            exit 0
+          fi
+
+          # GITHUB_SHA is the tip commit of the newly created branch
+          BRANCH_TIP="${GITHUB_SHA}"
+          MAIN_TIP=$(git rev-parse "origin/main")
+          DEVELOP_TIP=$(git rev-parse "origin/develop")
+
+          echo "New branch  : ${NEW_BRANCH}"
+          echo "Branch tip  : ${BRANCH_TIP}"
+          echo "main tip    : ${MAIN_TIP}"
+          echo "develop tip : ${DEVELOP_TIP}"
+
+          # Always allow if created from the develop HEAD
+          if [ "$BRANCH_TIP" = "$DEVELOP_TIP" ]; then
+            echo "Branch '${NEW_BRANCH}' was created from 'develop'. OK."
+            exit 0
+          fi
+
+          # Block if the tip commit is reachable from (i.e., on the history of) main
+          if git merge-base --is-ancestor "$BRANCH_TIP" "origin/main"; then
+            echo "::error::Branch '${NEW_BRANCH}' was created from 'main'. All branches must be created from 'develop'."
+            gh api --method DELETE "repos/${{ github.repository }}/git/refs/heads/${NEW_BRANCH}"
+            echo "Branch '${NEW_BRANCH}' has been automatically deleted. Please re-create it from 'develop'."
+            exit 1
+          fi
+
+          echo "Branch '${NEW_BRANCH}' was created from 'develop' or a valid source. OK."
