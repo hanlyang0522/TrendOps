@@ -16,40 +16,38 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Block branches created from main
+      - name: Enforce GitHub Flow — branches must originate from main
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           NEW_BRANCH="${GITHUB_REF_NAME}"
 
-          # Skip the protected branches themselves
-          if [ "$NEW_BRANCH" = "main" ] || [ "$NEW_BRANCH" = "develop" ]; then
+          # Skip the protected branch itself
+          if [ "$NEW_BRANCH" = "main" ]; then
             echo "Protected branch — skipping policy check."
             exit 0
           fi
 
-          # GITHUB_SHA is the tip commit of the newly created branch
           BRANCH_TIP="${GITHUB_SHA}"
           MAIN_TIP=$(git rev-parse "origin/main")
-          DEVELOP_TIP=$(git rev-parse "origin/develop")
 
-          echo "New branch  : ${NEW_BRANCH}"
-          echo "Branch tip  : ${BRANCH_TIP}"
-          echo "main tip    : ${MAIN_TIP}"
-          echo "develop tip : ${DEVELOP_TIP}"
+          echo "New branch : ${NEW_BRANCH}"
+          echo "Branch tip : ${BRANCH_TIP}"
+          echo "main tip   : ${MAIN_TIP}"
 
-          # Always allow if created from the develop HEAD
-          if [ "$BRANCH_TIP" = "$DEVELOP_TIP" ]; then
-            echo "Branch '${NEW_BRANCH}' was created from 'develop'. OK."
+          # Allow if created from main HEAD
+          if [ "$BRANCH_TIP" = "$MAIN_TIP" ]; then
+            echo "Branch '${NEW_BRANCH}' was created from 'main'. OK."
             exit 0
           fi
 
-          # Block if the tip commit is reachable from (i.e., on the history of) main
+          # Allow if the tip is reachable from main (i.e., based on main history)
           if git merge-base --is-ancestor "$BRANCH_TIP" "origin/main"; then
-            echo "::error::Branch '${NEW_BRANCH}' was created from 'main'. All branches must be created from 'develop'."
-            gh api --method DELETE "repos/${{ github.repository }}/git/refs/heads/${NEW_BRANCH}"
-            echo "Branch '${NEW_BRANCH}' has been automatically deleted. Please re-create it from 'develop'."
-            exit 1
+            echo "Branch '${NEW_BRANCH}' is based on 'main' history. OK."
+            exit 0
           fi
 
-          echo "Branch '${NEW_BRANCH}' was created from 'develop' or a valid source. OK."
+          echo "::error::Branch '${NEW_BRANCH}' was not created from 'main'. GitHub Flow requires all branches to originate from 'main'."
+          gh api --method DELETE "repos/${{ github.repository }}/git/refs/heads/${NEW_BRANCH}" || true
+          echo "Branch '${NEW_BRANCH}' has been automatically deleted. Please re-create it from 'main'."
+          exit 1
