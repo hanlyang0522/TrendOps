@@ -28,33 +28,34 @@
 
 ---
 
-## 2. Branch Strategy (Git Flow - Simplified)
+## 2. Branch Strategy (GitHub Flow)
 
-### Core Branches
+### Core Branch
 
 #### `main`
-- **Purpose:** Production-ready code only
-- **Protection:** Protected branch, requires PR reviews
-- **Releases:** Tagged with semantic versioning (v1.0.0, v1.1.0, v2.0.0, etc.)
-- **Direct commits:** Not allowed
-- **Merges from:** `hotfix/*` branches only
+- **Purpose:** 항상 배포 가능한 상태 유지
+- **Protection:** 보호 브랜치, PR 리뷰 필수
+- **Releases:** 시맨틱 버저닝 태그 (v1.0.0, v1.1.0, v2.0.0 등)
+- **Direct commits:** 허용하지 않음
+- **Merges from:** 모든 작업 브랜치 (`feature/*`, `fix/*`, `refactor/*`, `docs/*`, `test/*`, `chore/*`)
 
-#### `develop`
-- **Purpose:** Integration branch for the next release
-- **Default branch:** All feature PRs target this branch
-- **Protection:** Protected, requires CI checks to pass
-- **Direct commits:** Discouraged, use PRs
-- **Merges from:** `feature/*`, `fix/*`, `refactor/*`, `docs/*`, `test/*`, `chore/*`, `hotfix/*`
+### 작업 브랜치 (모두 `main`에서 분기 → `main`으로 병합)
 
-### Temporary Branches
+- **`feature/*`**: 새 기능 → `main`으로 PR
+- **`fix/*`**: 버그 수정 (긴급 포함) → `main`으로 PR
+- **`refactor/*`**: 코드 리팩토링 → `main`으로 PR
+- **`docs/*`**: 문서 업데이트 → `main`으로 PR
+- **`test/*`**: 테스트 추가 → `main`으로 PR
+- **`chore/*`**: 유지보수 작업 → `main`으로 PR
 
-- **`feature/*`**: New features → merge to `develop`
-- **`fix/*`**: Bug fixes → merge to `develop`
-- **`hotfix/*`**: Critical production fixes → merge to `main` AND `develop`
-- **`refactor/*`**: Code refactoring → merge to `develop`
-- **`docs/*`**: Documentation updates → merge to `develop`
-- **`test/*`**: Test additions → merge to `develop`
-- **`chore/*`**: Maintenance tasks → merge to `develop`
+### GitHub Flow 규칙
+
+1. `main` 브랜치는 항상 배포 가능한 상태여야 한다
+2. 모든 작업은 `main`에서 브랜치를 생성해 진행한다
+3. 브랜치는 짧게 유지하고 빠르게 병합한다
+4. PR은 항상 `main`을 대상으로 한다
+5. CI 통과 + 리뷰 승인 후 `main`에 병합한다
+6. 병합 후 필요 시 즉시 배포한다
 
 ---
 
@@ -78,8 +79,7 @@ feature/llm-integration
 feature/sentiment-analysis
 fix/crawler-timeout
 fix/empty-results-handling
-hotfix/database-connection
-hotfix/memory-leak-scheduler
+fix/database-connection
 refactor/database-connection
 refactor/simplify-crawler-logic
 docs/docker-setup-guide
@@ -95,7 +95,7 @@ chore/improve-makefile
 Feature/NewFeature          # Wrong: uppercase, not descriptive
 fix_bug                     # Wrong: underscore instead of hyphen, not descriptive
 feature/add-new-feature-for-summarizing-news-articles  # Wrong: too long
-hotfix/issue#123            # Wrong: contains special character #
+fix/issue#123               # Wrong: contains special character #
 ```
 
 ---
@@ -130,11 +130,11 @@ refactor(crawler): simplify news extraction logic
 ## 5. Pull Request Guidelines
 
 ### Workflow
-1. Create branch from `develop` (or `main` for hotfix)
-2. Commit with conventional messages
-3. Push and create PR to `develop`
-4. Wait for CI checks to pass
-5. Merge after approval
+1. `main`에서 브랜치 생성
+2. 컨벤셔널 커밋 메시지로 커밋
+3. Push 후 `main`을 대상으로 PR 생성
+4. CI 통과 및 리뷰 승인 대기
+5. 승인 후 `main`에 병합
 
 ### Title Format
 Same as commit messages: `<type>(<scope>): <subject>`
@@ -180,38 +180,38 @@ Required: black, isort, flake8, mypy, trailing-whitespace, end-of-file-fixer
 
 When creating PRs or branches, Copilot should:
 
-1. Target `develop` branch (unless hotfix)
-2. Use appropriate branch naming: `<type>/<descriptive-name>`
-3. Write conventional commit messages
-4. Ensure pre-commit hooks pass
-5. Reference related issues: `Closes #123`
-6. Keep PRs focused (one feature/fix per PR)
+1. `main` 브랜치를 대상으로 PR 생성
+2. 브랜치 명명 규칙 사용: `<type>/<descriptive-name>`
+3. 컨벤셔널 커밋 메시지 사용
+4. pre-commit 훅 통과 확인
+5. 관련 이슈 참조: `Closes #123`
+6. PR은 하나의 기능/수정에 집중 (focused PR)
 
 ---
 
 ## 8. Common Scenarios
 
-### Feature Development
+### 기능 개발
 ```bash
-git checkout -b feature/llm-integration develop
+git checkout -b feature/llm-integration main
 # ... make changes ...
 git commit -m "feat(llm): add OpenAI API configuration"
 git push origin feature/llm-integration
-# Create PR to develop
+# Create PR to main
 ```
 
-### Bug Fix
+### 버그 수정
 ```bash
-git checkout -b fix/crawler-timeout develop
+git checkout -b fix/crawler-timeout main
 git commit -m "fix(crawler): increase request timeout to 30s"
-# Create PR to develop
+# Create PR to main
 ```
 
-### Hotfix
+### 긴급 수정 (Hotfix)
 ```bash
-git checkout -b hotfix/db-connection main
-git commit -m "hotfix(db): fix connection pool exhaustion"
-# Create TWO PRs: one to main, one to develop
+git checkout -b fix/db-connection main
+git commit -m "fix(db): fix connection pool exhaustion"
+# Create PR to main (GitHub Flow — 별도 hotfix 브랜치 불필요)
 ```
 
 ---
@@ -295,7 +295,6 @@ When generating code:
 ```
 feature/descriptive-name
 fix/bug-description
-hotfix/critical-issue
 refactor/component-name
 docs/topic
 test/test-name
@@ -316,8 +315,7 @@ ci: update CI/CD
 ```
 
 ### PR Targets
-- **Features, fixes, refactors, docs, tests, chores** → `develop`
-- **Hotfixes** → `main` (then merge to `develop`)
+- **모든 브랜치 (feature, fix, refactor, docs, test, chore)** → `main`
 
 ### Pre-commit
 ```bash
