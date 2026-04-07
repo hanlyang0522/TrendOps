@@ -1,19 +1,32 @@
 {
-  "editor.formatOnSave": true,
-  "[python]": {
-    "editor.defaultFormatter": "ms-python.black-formatter",
-    "editor.codeActionsOnSave": {
-      "source.organizeImports": true
+    "editor.formatOnSave": true,
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit"
+        }
+    },
+    "black-formatter.args": [
+        "--line-length=88"
+    ],
+    "flake8.args": [
+        "--max-line-length=88",
+        "--extend-ignore=E203,W503",
+        "--exit-zero"
+    ],
+    "mypy-type-checker.args": [
+        "--ignore-missing-imports",
+        "--no-strict-optional"
+    ],
+    "chat.promptFilesRecommendations": {
+        "speckit.constitution": true,
+        "speckit.specify": true,
+        "speckit.plan": true,
+        "speckit.tasks": true,
+        "speckit.implement": true
+    },
+    "chat.tools.terminal.autoApprove": {
+        ".specify/scripts/bash/": true,
+        ".specify/scripts/powershell/": true
     }
-  },
-  "black-formatter.args": ["--line-length=88"],
-  "flake8.args": [
-    "--max-line-length=88",
-    "--extend-ignore=E203,W503",
-    "--exit-zero"
-  ],
-  "mypy-type-checker.args": [
-    "--ignore-missing-imports",
-    "--no-strict-optional"
-  ]
 }
