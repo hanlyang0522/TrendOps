@@ -41,9 +41,9 @@ jobs:
             exit 0
           fi
 
-          # Allow if the tip is reachable from main (i.e., based on main history)
-          if git merge-base --is-ancestor "$BRANCH_TIP" "origin/main"; then
-            echo "Branch '${NEW_BRANCH}' is based on 'main' history. OK."
+          # Allow if main is an ancestor of the branch tip (i.e., branch was created from main)
+          if git merge-base --is-ancestor "origin/main" "$BRANCH_TIP"; then
+            echo "Branch '${NEW_BRANCH}' is based on 'main'. OK."
             exit 0
           fi
 
