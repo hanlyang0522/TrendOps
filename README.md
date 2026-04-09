@@ -111,7 +111,7 @@ NAVER_CLIENT_SECRET=your_naver_client_secret_here
 GEMINI_API_KEY=your_gemini_api_key_here
 
 # ── 선택 (LLM 모델 오버라이드) ──────────────────────────
-GEMINI_FLASH_MODEL=gemini-2.0-flash
+GEMINI_FLASH_MODEL=gemini-2.5-flash
 GEMINI_PRO_MODEL=gemini-2.5-pro
 
 # ── 선택 (기업 분석 강화) ──────────────────────────────

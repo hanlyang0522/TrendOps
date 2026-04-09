@@ -22,7 +22,7 @@ Tier = Literal["flash", "pro", "pro-thinking"]
 
 # 환경 변수 기반 모델 이름
 # GEMINI_API_KEY (required)
-# GEMINI_FLASH_MODEL (default: gemini-2.0-flash)
+# GEMINI_FLASH_MODEL (default: gemini-2.5-flash)
 # GEMINI_PRO_MODEL  (default: gemini-2.5-pro)
 
 def call(

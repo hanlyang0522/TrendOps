@@ -24,7 +24,7 @@
 ## 결정 2: LLM 프로바이더 및 티어 전략
 
 **Decision**: Google Gemini 단일 프로바이더, `google-genai` SDK, 작업 복잡도에 따라 3단계 티어:
-- **Tier 1 (Flash)**: `gemini-2.0-flash` — 수집/요약/매핑 등 반복 저비용 작업
+- **Tier 1 (Flash)**: `gemini-2.5-flash` — 수집/요약/매핑 등 반복 저비용 작업
 - **Tier 2 (Pro)**: `gemini-2.5-pro` — 자소서 초안/전략 도출 등 중비용 작업
 - **Tier 3 (Pro Thinking)**: `gemini-2.5-pro` + thinking mode — 쳙 문장 다듬기/자가진단 결합 등 고품질 작업
 
@@ -34,7 +34,7 @@
 - `cover_letter/llm_client.py`에 티어 라우팅 집중, 호출측에서는 `tier='flash'|'pro'|'pro-thinking'` 매개변수만 전달
 - 구글 AI Studio 무료 플랜 + 수량제로 MVP 개발 비용 최소화 가능
 
-**연동 환경 변수**: `GEMINI_API_KEY` (required), `GEMINI_FLASH_MODEL` (default: `gemini-2.0-flash`), `GEMINI_PRO_MODEL` (default: `gemini-2.5-pro`)
+**연동 환경 변수**: `GEMINI_API_KEY` (required), `GEMINI_FLASH_MODEL` (default: `gemini-2.5-flash`), `GEMINI_PRO_MODEL` (default: `gemini-2.5-pro`)
 
 **프롬프트 구조 원칙**:
 - System prompt: 역할 정의 + 문체 프로필 + 제약 조건(글자 수, 언어)
