@@ -117,7 +117,7 @@
 - [ ] T036 [P] `docker-compose.yml` 통합 검증 — `make up` 후 DB 마이그레이션 자동 실행, Streamlit 앱 접속 확인
 - [ ] T037 [P] pre-commit 전체 통과 — `pre-commit run --all-files` (black, isort, flake8, mypy, trailing-whitespace, end-of-file-fixer)
 - [ ] T038 코드리뷰 — 공통 DB 연결 패턴 추출 여부 검토, `llm_client.call()` 중복 호출 패턴 리팩토링 검토
-- [ ] T039 [P] ADR 3개 최종화 — 결과 및 트레이드오프 섹션 보완, 상태 `제안 → 승인`
+- [ ] T039 [P] ADR 4개 최종화 — 결과 및 트레이드오프 섹션 보완, 상태 `제안 → 승인`
 - [ ] T040 `README.md` 업데이트 — 자소서 서비스 실행 방법 (`GEMINI_API_KEY 설정 → make up → localhost:8501`) 추가
 
 ---
@@ -143,7 +143,7 @@ Phase 7 통합 (T035~T040)
 ### 단계 내 병렬 실행 예시
 
 **Phase 2 병렬**:
-- T005 (DB 마이그레이션) ‖ T007 (패키지 init) ‖ T008 (ADR 초안 3개)
+- T005 (DB 마이그레이션) ‖ T007 (패키지 init) ‖ T008 (ADR 초안 4개)
 - T006 (llm_client) → T005 완료 후 DB 연동 테스트
 
 **Phase 3 병렬**:
@@ -173,6 +173,6 @@ Phase 7 통합 (T035~T040)
 - US3 → US4: 답변 생성·자가진단 추가 (7개 태스크)
 - 통합 마무리 (6개 태스크)
 
-**속 태스크**: 44개
+**총 태스크**: 44개
 **US1 MVP**: 15개 | **US2 추가**: 11개 | **US3 추가**: 5개 | **US4 추가**: 7개 | **통합**: 6개
 **병렬 기회**: 24개 태스크 ([P] 마킹) — Phase별 최대 3개 동시 실행 가능
