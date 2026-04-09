@@ -339,3 +339,6 @@ make clean          # Remove all containers and volumes
 **Version:** 1.0.0
 
 This document should be updated whenever significant changes to the project structure, workflow, or conventions are made.
+
+## Recent Changes
+- 001-cover-letter-automation: Added PyMuPDF (PDF 파싱), python-docx (DOCX 파싱), openai SDK (LLM 호출), Streamlit (프론트엔드 UI), `cover_letter/` 서비스 모듈, `frontend/` Streamlit 앱, `db/migrations/` DB 마이그레이션 스크립트, `OPENAI_API_KEY` 환경 변수
