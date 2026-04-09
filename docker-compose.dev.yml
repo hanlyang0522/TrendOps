@@ -15,16 +15,8 @@ services:
     environment:
       POSTGRES_PASSWORD: dev_password
 
-  crawler:
+  cover-letter:
     environment:
       POSTGRES_PASSWORD: dev_password
-      LOG_LEVEL: DEBUG
-      RUN_ON_START: "true"  # 개발 시 즉시 실행
     volumes:
       - .:/app  # 개발 시 소스 코드 실시간 마운트
-
-  scheduler:
-    environment:
-      POSTGRES_PASSWORD: dev_password
-      RUN_ON_START: "true"
-      CRAWL_SCHEDULE: "*/5 * * * *"  # 5분마다 실행 (개발용)

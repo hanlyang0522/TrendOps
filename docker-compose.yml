@@ -41,57 +41,6 @@ services:
       - trendops-network
     restart: "no"
 
-  crawler:
-    build:
-      context: .
-      dockerfile: Dockerfile.crawler
-    container_name: trendops-crawler
-    depends_on:
-      - db-init
-    environment:
-      POSTGRES_HOST: postgres
-      POSTGRES_DB: ${POSTGRES_DB:-postgres}
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
-      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
-      SEARCH_KEYWORD: ${SEARCH_KEYWORD:?SEARCH_KEYWORD is required}
-      MAX_ARTICLES: ${MAX_ARTICLES:-50}
-      MAX_PAGES: ${MAX_PAGES:-3}
-      SORT_ORDER: ${SORT_ORDER:-date}
-      NAVER_CLIENT_ID: ${NAVER_CLIENT_ID:?NAVER_CLIENT_ID is required}
-      NAVER_CLIENT_SECRET: ${NAVER_CLIENT_SECRET:?NAVER_CLIENT_SECRET is required}
-    networks:
-      - trendops-network
-    volumes:
-      - ./logs:/app/logs
-    restart: "no"
-
-  scheduler:
-    build:
-      context: .
-      dockerfile: Dockerfile.scheduler
-    container_name: trendops-scheduler
-    depends_on:
-      - postgres
-    environment:
-      POSTGRES_HOST: postgres
-      POSTGRES_DB: ${POSTGRES_DB:-postgres}
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
-      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
-      CRAWL_SCHEDULE: ${CRAWL_SCHEDULE:-0 9 * * *}
-      SEARCH_KEYWORD: ${SEARCH_KEYWORD:?SEARCH_KEYWORD is required}
-      RUN_ON_START: ${RUN_ON_START:-false}
-      MAX_PAGES: ${MAX_PAGES:-3}
-      SORT_ORDER: ${SORT_ORDER:-date}
-      NAVER_CLIENT_ID: ${NAVER_CLIENT_ID:?NAVER_CLIENT_ID is required}
-      NAVER_CLIENT_SECRET: ${NAVER_CLIENT_SECRET:?NAVER_CLIENT_SECRET is required}
-    networks:
-      - trendops-network
-    volumes:
-      - ./logs:/app/logs
-    restart: unless-stopped
-
   cover-letter:
     build:
       context: .
