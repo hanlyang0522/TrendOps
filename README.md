@@ -119,7 +119,7 @@ DART_API_KEY=                    # DART 사업보고서
 FIRECRAWL_API_KEY=               # 뉴스 fallback
 
 # ── 크롤러 ───────────────────────────────────────────
-SEARCH_KEYWORD=당근마켓
+SEARCH_KEYWORD=your_search_keyword_here
 CRAWL_SCHEDULE=0 9 * * *
 ```
 

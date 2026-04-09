@@ -13,7 +13,9 @@ from db.db_news import create_new_news, get_connection
 def main():
     """메인 실행 함수"""
     # 환경 변수에서 설정 가져오기
-    keyword = os.getenv("SEARCH_KEYWORD", "당근마켓")
+    keyword = os.getenv("SEARCH_KEYWORD", "")
+    if not keyword:
+        raise ValueError("SEARCH_KEYWORD 환경 변수가 설정되지 않았습니다.")
     max_pages = int(os.getenv("MAX_PAGES", "3"))
     sort = os.getenv("SORT_ORDER", "date")
 
