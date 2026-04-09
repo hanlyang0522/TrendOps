@@ -1,0 +1,32 @@
+FROM python:3.13-slim
+
+WORKDIR /app
+
+# 시스템 패키지 설치
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# 의존성 설치
+COPY pyproject.toml .
+RUN pip install --no-cache-dir \
+    google-genai \
+    streamlit \
+    psycopg2-binary \
+    requests \
+    beautifulsoup4
+
+# 소스 복사
+COPY cover_letter/ ./cover_letter/
+COPY frontend/ ./frontend/
+COPY db/ ./db/
+
+EXPOSE 8501
+
+HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health || exit 1
+
+CMD ["streamlit", "run", "frontend/cover_letter_app.py", \
+     "--server.address=0.0.0.0", \
+     "--server.port=8501", \
+     "--server.headless=true"]

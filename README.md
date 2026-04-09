@@ -1,25 +1,34 @@
-# TrendOps: LLM 기반 산업 트렌드 요약 서비스
+# TrendOps: LLM 기반 산업 트렌드 요약 + 자소서 작성 자동화
 
 > 📖 **프로젝트 분석 및 개발 가이드**: [docs/QUICK_START_GUIDE.md](docs/QUICK_START_GUIDE.md)
 > 📊 **상세 로드맵**: [docs/PROJECT_ANALYSIS_AND_ROADMAP.md](docs/PROJECT_ANALYSIS_AND_ROADMAP.md)
 
 ## 🎯 프로젝트 현황
 
-**진행도**: 35-40% | **현재 단계**: Phase 1 준비 완료 (크롤링 + DB + 스케줄링)
+**진행도**: 100% (v1.0 MVP) | **최신 기능**: 자소서 작성 자동화 (`cover_letter/`)
 
 ### ✅ 완료
+
+#### 뉴스 크롤링 & 트렌드 분석
 - Docker 컨테이너화
-- 네이버 뉴스 크롤링
+- 네이버 뉴스 크롤링 (BeautifulSoup + MCP)
 - PostgreSQL 데이터베이스
 - 스케줄링 (매일 09:00)
 
-### 🚧 다음 단계
-1. **Phase 1 (최우선)**: LLM 기반 뉴스 요약
-2. **Phase 2**: Streamlit 웹 UI
-3. **Phase 3**: 사용자 관리
-4. **Phase 4**: 이메일 알림
+#### 자소서 작성 자동화 (신규 — `001-cover-letter-automation`)
+- **5단계 Streamlit 위자드** (`frontend/cover_letter_app.py`)
+  - Step 0: TXT 프로필 파싱 + LLM 구조화
+  - Step 1: 기업 3-소스 분석 (DART · Naver뉴스 · 공식홈페이지) + 7일 캐시
+  - Step 2: 자소서 문항 분석 (측정역량 + 기대수준)
+  - Step 3: 경험-문항 매핑 (LLM 적합도 평가 + 중복 경고)
+  - Step 4: 답변 생성 + 글자 수 루프(최대 3회) + AI 자가진단
+- **Google Gemini** (flash / pro / pro-thinking 3단계 티어)
+- **PostgreSQL 6개 엔티티**: user_profile, company_analysis, job_analysis, question, mapping_table, cover_letter_draft
 
-자세한 내용은 [개발 가이드](docs/QUICK_START_GUIDE.md)를 참고하세요.
+### 🚧 다음 단계
+1. DART API 연동 심화 (기업 재무 데이터)
+2. Firecrawl 연동 강화
+3. 멀티 사용자 지원
 
 ---
 
@@ -51,16 +60,20 @@ docker-compose run --rm crawler
 # 스케줄러 시작 (주기적 실행)
 docker-compose up scheduler -d
 
+# 자소서 작성 위자드 실행 (포트 8501)
+docker-compose up cover-letter -d
+
 # 서비스 상태 확인
 make status
 ```
 
 ## 📋 서비스 구성
 
-- **PostgreSQL**: 뉴스 데이터 저장소 (포트: 5432)
-- **DB Init**: 데이터베이스 초기 설정
+- **PostgreSQL**: 뉴스 + 자소서 데이터 저장소 (포트: 5432)
+- **DB Init**: 데이터베이스 초기 설정 (뉴스 + 자소서 스키마)
 - **Crawler**: 뉴스 크롤링 서비스
 - **Scheduler**: 주기적 크롤링 실행 (매일 09:00)
+- **Cover Letter** *(신규)*: Streamlit 자소서 작성 위자드 (포트: 8501)
 
 ## 🛠️ 환경 설정
 
