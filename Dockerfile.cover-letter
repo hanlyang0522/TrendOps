@@ -22,6 +22,9 @@ COPY cover_letter/ ./cover_letter/
 COPY frontend/ ./frontend/
 COPY db/ ./db/
 
+# Python 모듈 경로 설정
+ENV PYTHONPATH=/app
+
 EXPOSE 8501
 
 HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health || exit 1
