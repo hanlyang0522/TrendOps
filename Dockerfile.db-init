@@ -16,6 +16,7 @@ RUN pip install --no-cache-dir psycopg2-binary
 
 # Copy source code
 COPY db/ ./db/
+COPY scripts/db_init.py ./scripts/
 
 # Create logs directory
 RUN mkdir -p logs
@@ -27,4 +28,4 @@ ENV PYTHONPATH=/app
 COPY scripts/wait-for-postgres.sh ./
 RUN chmod +x wait-for-postgres.sh
 
-CMD ["./wait-for-postgres.sh", "postgres", "python", "-c", "from db.db_news import setup_database; setup_database()"]
+CMD ["./wait-for-postgres.sh", "postgres", "python", "scripts/db_init.py"]
