@@ -46,7 +46,7 @@ def setup_database():
         # 테이블 생성
         cur.execute(
             """
-            CREATE TABLE danggn_market_urls (
+            CREATE TABLE IF NOT EXISTS danggn_market_urls (
                 id SERIAL PRIMARY KEY,
                 title TEXT,
                 url VARCHAR(500) NOT NULL
