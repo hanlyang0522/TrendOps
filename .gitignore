@@ -19,6 +19,7 @@ logs/
 # Database backups
 *.sql
 backup_*.sql
+!db/migrations/*.sql
 
 # IDE
 .vscode/
