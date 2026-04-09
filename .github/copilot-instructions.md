@@ -341,4 +341,11 @@ make clean          # Remove all containers and volumes
 This document should be updated whenever significant changes to the project structure, workflow, or conventions are made.
 
 ## Recent Changes
-- 001-cover-letter-automation: Added PyMuPDF (PDF 파싱), python-docx (DOCX 파싱), openai SDK (LLM 호출), Streamlit (프론트엔드 UI), `cover_letter/` 서비스 모듈, `frontend/` Streamlit 앱, `db/migrations/` DB 마이그레이션 스크립트, `OPENAI_API_KEY` 환경 변수
+- 001-cover-letter-automation: Added Python 3.13 + google-genai (LLM 티어 라우팅), streamlit (UI), psycopg2-binary (DB — 기존 사용 중). TXT 파일 입력은 내장 `str` 처리로 외부 파서 불필요
+- 001-cover-letter-automation: google-genai SDK (Gemini Flash/Pro/Pro-Thinking 3단계 티어 LLM), Streamlit (프론트엔드 UI), `cover_letter/` 서비스 모듈, `frontend/` Streamlit 앱, `db/migrations/` DB 마이그레이션 스크립트, `GEMINI_API_KEY` 환경 변수. 입력 방식: TXT 파일 업로드 + 텍스트 직접 붙여넣기 (PDF·DOCX 파싱 MVP 범위 외)
+- 001-cover-letter-automation: 기업 정보 수집 3-소스 확장 — DART API(`dart-fss`, `DART_API_KEY` optional), Naver News API + Firecrawl fallback, 공식 홈페이지 BeautifulSoup4 스크래핑. 수집기 모듈: `cover_letter/collectors/dart_collector.py`, `naver_collector.py`, `website_crawler.py`. `DART_API_KEY`·`FIRECRAWL_API_KEY` 환경 변수 추가
+
+## Active Technologies
+- Python 3.13 + google-genai (LLM 티어 라우팅), streamlit (UI), psycopg2-binary (DB — 기존 사용 중). TXT 파일 입력은 내장 `str` 처리로 외부 파서 불필요 (001-cover-letter-automation)
+- PostgreSQL 15 (Docker 컨테이너, 기존 재사용) (001-cover-letter-automation)
+- dart-fss (DART 사업보고서 수집, optional), requests+beautifulsoup4 (홈페이지 스크래핑, 기존 TrendOps 스택), Firecrawl API (Naver News fallback, optional) (001-cover-letter-automation)
