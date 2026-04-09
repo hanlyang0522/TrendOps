@@ -185,7 +185,7 @@ class NaverMCPCrawler:
 def main():
     """메인 실행 함수"""
     # 환경 변수에서 설정 가져오기
-    keyword = os.getenv("SEARCH_KEYWORD", "당근마켓")
+    keyword = os.getenv("SEARCH_KEYWORD", "")
     max_pages = int(os.getenv("MAX_PAGES", "3"))
     sort = os.getenv("SORT_ORDER", "date")
 

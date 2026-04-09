@@ -25,8 +25,8 @@ restart: ## Restart all services
 logs: ## Show logs for all services
 	docker-compose logs -f
 
-logs-crawler: ## Show crawler logs
-	docker-compose logs -f crawler
+logs-cover-letter: ## Show cover-letter service logs
+	docker-compose logs -f cover-letter
 
 logs-postgres: ## Show postgres logs
 	docker-compose logs -f postgres
@@ -40,17 +40,11 @@ init: ## Initialize database only
 	sleep 10
 	docker-compose run --rm db-init
 
-test: ## Run crawler once for testing
-	docker-compose up postgres -d
-	sleep 10
-	docker-compose run --rm db-init
-	docker-compose run --rm crawler
+test: ## Verify cover-letter service is running
+	docker-compose ps cover-letter
 
 status: ## Show service status
 	docker-compose ps
-
-shell-crawler: ## Access crawler container shell
-	docker-compose exec crawler /bin/bash
 
 shell-postgres: ## Access postgres container shell
 	docker-compose exec postgres psql -U postgres -d postgres
