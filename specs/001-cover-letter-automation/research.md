@@ -1,35 +1,40 @@
 # Research: 자소서 작성 자동화 서비스
 
 **Branch**: `001-cover-letter-automation` | **Date**: 2026-04-09
-**Status**: Complete — 모든 NEEDS CLARIFICATION 해소됨
+**Status**: Complete — 모든 NEEDS CLARIFICATION 해소됨 (결정 8개)
 
 ---
 
-## 결정 1: 문서 파싱 라이브러리
+## 결정 1: 사용자 정보 입력 방식
 
-**Decision**: PyMuPDF(`fitz`) for PDF, `python-docx` for DOCX, 내장 `open()` for TXT
+**Decision**: Streamlit 텍스트 영역 직접 붙여넣기 + TXT 파일 업로드(`st.file_uploader`). UTF-8 decode 후 내장 `str` 처리.
 
 **Rationale**:
-- PyMuPDF는 렌더링 없이 텍스트 레이어를 직접 추출하여 속도가 빠르고, 한글 문자 처리가 안정적이다
-- `pypdf`(구 PyPDF2)는 한글 인코딩 처리에서 간헐적 오류가 보고되어 제외
-- `python-docx`는 `.docx` 표준 라이브러리로 사실상 유일한 선택지
-- 이미지만 있는 스캔본 PDF는 MVP 범위 외로 OCR 라이브러리(pytesseract)는 도입하지 않음
+- PDF·DOCX 파싱은 MVP 범위 외로 제외 (Clarify Session 2026-04-09 Q1)
+- TXT 파일은 `st.file_uploader(type=['txt'])` + `file.read().decode('utf-8')` 로 처리하며 외부 라이브러리 불필요
+- 텍스트 직접 붙여넣기는 `st.text_area()` 위젯 하나로 구현 가능, 복잡성 최소화
+- 두 입력 방식은 OR 조건으로 처리: 둘 중 하나만 채워도 진행 가능
 
 **Alternatives considered**:
-- `pypdf`: 경량이지만 한글 CID 폰트 디코딩 불안정
-- `pdfplumber`: PyMuPDF 기반이나 테이블 추출 특화, 오버스펙
-- `tesseract + pytesseract`: 스캔 PDF 지원하지만 MVP 범위 외
+- PyMuPDF + python-docx: PDF·DOCX 지원이지만 MVP 단계에서 복잡도 대비 사용자 이득 낮음
+- Google Docs 연동: 외부 OAuth 필요, MVP 범위 외
 
 ---
 
-## 결정 2: LLM 프로바이더 및 호출 패턴
+## 결정 2: LLM 프로바이더 및 티어 전략
 
-**Decision**: OpenAI GPT-4o, `openai` Python SDK, 환경 변수(`OPENAI_API_KEY`)로 관리
+**Decision**: Google Gemini 단일 프로바이더, `google-genai` SDK, 작업 복잡도에 따라 3단계 티어:
+- **Tier 1 (Flash)**: `gemini-2.0-flash` — 수집/요약/매핑 등 반복 저비용 작업
+- **Tier 2 (Pro)**: `gemini-2.5-pro` — 자소서 초안/전략 도출 등 중비용 작업
+- **Tier 3 (Pro Thinking)**: `gemini-2.5-pro` + thinking mode — 쳙 문장 다듬기/자가진단 결합 등 고품질 작업
 
 **Rationale**:
-- 기존 TrendOps 헌법에 `API 기반 (OpenAI 등)` 명시, OpenAI 호환 API는 환경 변수 교체만으로 다른 프로바이더(Anthropic, Google 등) 전환 가능
-- 자소서 한국어 생성, 문체 모방, AI 표현 감지 등 모든 작업에 GPT-4o가 충분한 성능 제공
-- LLM 호출은 `cover_letter/llm_client.py` 단일 모듈에 집중, 프롬프트 템플릿은 `cover_letter/prompts/` 폴더에 분리하여 모델 교체 용이
+- 단일 프로바이더로 API Key 1개, 오류 처리 단일화, 운영 선단 단순화
+- Gemini Flash 저비용 + Gemini Pro 고품질로 비용 절감과 품질 목표 동시 달성
+- `cover_letter/llm_client.py`에 티어 라우팅 집중, 호출측에서는 `tier='flash'|'pro'|'pro-thinking'` 매개변수만 전달
+- 구글 AI Studio 무료 플랜 + 수량제로 MVP 개발 비용 최소화 가능
+
+**연동 환경 변수**: `GEMINI_API_KEY` (required), `GEMINI_FLASH_MODEL` (default: `gemini-2.0-flash`), `GEMINI_PRO_MODEL` (default: `gemini-2.5-pro`)
 
 **프롬프트 구조 원칙**:
 - System prompt: 역할 정의 + 문체 프로필 + 제약 조건(글자 수, 언어)
@@ -37,8 +42,9 @@
 - 자가진단 호출: 별도 prompt 파일, 기존 답변 텍스트를 입력으로 사용
 
 **Alternatives considered**:
-- Anthropic Claude: 장문 생성 품질 우수하나 OpenAI SDK 호환 불완전, 추가 SDK 도입 필요
-- 로컬 LLM(Ollama): 비용 절감 가능하나 한국어 자소서 품질이 GPT-4o 수준 미달 (MVP 이후 옵션)
+- 3프로바이더 (Google+OpenAI+Anthropic): API Key 3개, 오류 모드 3개, MVP 복잡도 과잉
+- OpenAI GPT-4o 단일: 티어 분리 불가, 과금 리스크
+- 로컬 LLM: 한국어 자소서 품질 미달
 
 ---
 
@@ -150,3 +156,35 @@ else:
 **Alternatives considered**:
 - Redis 캐시: 단일 사용자 로컬 환경에서 PostgreSQL만으로 충분, 추가 컨테이너 불필요
 - 파일 캐시(JSON 파일): DB 트랜잭션 보장 없음, 추후 멀티유저 확장 고려 시 부적합
+
+---
+
+## 결정 8: 기업 정보 3-소스 수집 전략
+
+**Decision**: 기업 분석 정보를 3개 소스에서 병렬 수집하여 통합:
+1. **DART API** (`dart-fss` 라이브러리 또는 금감원 OpenAPI 직접 호출) — 최근 3개년 사업보고서에서 주요 제품·서비스, 지식재산권, 시장현황, 주요계약·연구개발 섹션 추출
+2. **Naver News API** (기존 TrendOps `crawling/` 모듈 재사용) — 직무·기업 관련 최신 뉴스 수집. 결과 불충분 시 Firecrawl API로 fallback
+3. **공식 홈페이지 스크래핑** (`requests` + `BeautifulSoup4`, 기존 TrendOps 스택) — 인재상, 비전·미션 페이지 수집
+
+**수집 오케스트레이션**: `company_service.py`의 `get_or_analyze_company()`가 3개 수집기를 순차 호출 후 결과를 통합하여 Gemini Flash로 단일 요약 생성
+
+**Rationale**:
+- DART 사업보고서: 지원 직무 관련 사업 배경·시장 맥락을 객관적 공시 데이터로 확보 → 자소서 신뢰도 향상
+- Naver News: 기존 TrendOps 크롤링 모듈 재사용으로 추가 개발 비용 최소화
+- 공식 홈페이지: 인사담당자가 실제 홈페이지에서 확인하는 인재상·비전을 직접 수집
+- 각 소스 독립 실패 허용 (graceful degradation): DART API Key 미설정이나 홈페이지 스크래핑 실패 시 해당 소스만 스킵하고 나머지로 계속 진행
+
+**수집기 파일 구조**:
+```
+cover_letter/collectors/
+├── dart_collector.py     # DART API 사업보고서 수집
+├── naver_collector.py    # Naver News API + Firecrawl fallback
+└── website_crawler.py   # 공식 홈페이지 인재상·비전 스크래핑
+```
+
+**환경 변수 추가**: `DART_API_KEY` (optional — 미설정 시 DART 소스 스킵), `FIRECRAWL_API_KEY` (optional — Naver fallback용)
+
+**Alternatives considered**:
+- DART만 단독 사용: 뉴스 최신성·홈페이지 인재상 누락으로 자소서 맥락 부족
+- 단일 웹 검색 API(Google Custom Search 등): 결과 범위 불확실, 공시 데이터 누락
+- LangChain Agent 자율 수집: MVP 복잡도 과잉, 수집 결과 재현성 낮음

@@ -52,9 +52,7 @@ docker compose run --rm db-init
 source .venv/bin/activate
 
 pip install \
-  pymupdf \
-  python-docx \
-  openai \
+  google-genai \
   streamlit
 ```
 

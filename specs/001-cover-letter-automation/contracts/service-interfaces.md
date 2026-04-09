@@ -8,6 +8,50 @@
 
 ---
 
+## 0. llm_client.py
+
+**목적**: Google Gemini 단일 프로바이더 + 티어 라우팅 추상화
+
+```python
+# cover_letter/llm_client.py
+
+import os
+from typing import Literal
+
+Tier = Literal["flash", "pro", "pro-thinking"]
+
+# 환경 변수 기반 모델 이름
+# GEMINI_API_KEY (required)
+# GEMINI_FLASH_MODEL (default: gemini-2.0-flash)
+# GEMINI_PRO_MODEL  (default: gemini-2.5-pro)
+
+def call(
+    prompt: str,
+    tier: Tier = "flash",
+    system: str = "",
+    temperature: float | None = None,
+) -> str:
+    """Gemini 모델 호출. tier 에 따라 모델 자동 선택.
+
+    Args:
+        prompt: 사용자 프롬프트 (user turn)
+        tier: 'flash' | 'pro' | 'pro-thinking'
+              - flash       → GEMINI_FLASH_MODEL (수집/요약/매핑)
+              - pro         → GEMINI_PRO_MODEL   (초안/전략)
+              - pro-thinking → GEMINI_PRO_MODEL + thinking (마무리/자가진단)
+        system: 시스템 프롬프트 (선택)
+        temperature: 미지정 시 tier 기본값 사용 (flash=0.3, pro=0.7, pro-thinking=1.0)
+
+    Returns:
+        모델 응답 텍스트
+
+    Raises:
+        RuntimeError: API 호출 실패 또는 빈 응답
+    """
+```
+
+---
+
 ## 1. profile_service.py
 
 **목적**: 파일 파싱, LLM 프로필 추출, DB 저장/로드
@@ -15,18 +59,18 @@
 ```python
 # cover_letter/profile_service.py
 
-def parse_file(file_path: str) -> str:
-    """PDF/DOCX/TXT 파일에서 텍스트 추출.
+def parse_input(text: str | None, file_bytes: bytes | None) -> str:
+    """텍스트 직접 붙여넣기 또는 TXT 파일 바이트에서 문자열 추출.
 
     Args:
-        file_path: 업로드된 파일의 로컬 경로
+        text: Streamlit text_area 에서 받은 문자열 (없으면 None)
+        file_bytes: st.file_uploader에서 받은 TXT 파일 bytes (없으면 None)
 
     Returns:
-        추출된 텍스트 문자열
+        처리된 텍스트 문자열
 
     Raises:
-        ValueError: 지원하지 않는 파일 형식
-        RuntimeError: 파싱 실패 (이미지 전용 PDF 등)
+        ValueError: text와 file_bytes 모두 None이거나 빈 값인 경우
     """
 
 def extract_profile(texts: list[str]) -> dict:
@@ -73,7 +117,12 @@ def merge_profile(existing: dict, new_texts: list[str]) -> dict:
 def get_or_analyze_company(company_name: str) -> dict:
     """기업 분석 결과를 캐시에서 조회하거나 없으면 새로 분석.
 
-    캐시 유효기간 7일. 캐시 히트 시 뉴스만 재검색하여 news_summary 갱신.
+    캐시 유효기간 7일.
+    - 캐시 히트 (analyzed_at < 7일): naver_collector로 뉴스만 재검색하여 news_summary 갱신 후 반환
+    - 캐시 미스: 3개 소스 순차 수집 후 Gemini Flash로 통합 요약:
+      1. DART API (dart_collector.py) — 최근 3개년 사업보고서 주요 섹션. DART_API_KEY 없으면 스킵
+      2. Naver News API (naver_collector.py) — 직무 관련 최신 뉴스. 5건 미만 시 Firecrawl fallback
+      3. 공식 홈페이지 (website_crawler.py) — 인재상·비전 스크래핑. 실패 시 None으로 스킵
 
     Args:
         company_name: 기업명 (예: "삼성전자")
@@ -84,8 +133,8 @@ def get_or_analyze_company(company_name: str) -> dict:
             "id": int, "company_name": str,
             "overview": str, "culture_and_values": str,
             "industry_trends": str, "competitive_edge": str,
-            "news_summary": str, "source_urls": list[str],
-            "cache_hit": bool
+            "news_summary": str, "dart_summary": str,
+            "source_urls": list[str], "cache_hit": bool
         }
     """
 
@@ -197,6 +246,7 @@ def save_mapping(question_id: int, entries: list[dict]) -> int:
 
 ## 5. generation_service.py
 
+**LLM 티어**: `llm_client.call(tier='pro')` 의성 시 → Gemini Pro. 쳙 문장 다듬기는 `tier='pro-thinking'` 사용
 **목적**: 답변 초안 생성, 글자 수 제어 루프, AI 자가진단
 
 ```python
