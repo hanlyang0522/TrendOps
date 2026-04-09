@@ -1,118 +1,155 @@
 # TrendOps: LLM 기반 산업 트렌드 요약 + 자소서 작성 자동화
 
-> 📖 **프로젝트 분석 및 개발 가이드**: [docs/QUICK_START_GUIDE.md](docs/QUICK_START_GUIDE.md)
-> 📊 **상세 로드맵**: [docs/PROJECT_ANALYSIS_AND_ROADMAP.md](docs/PROJECT_ANALYSIS_AND_ROADMAP.md)
-
-## 🎯 프로젝트 현황
-
-**진행도**: 100% (v1.0 MVP) | **최신 기능**: 자소서 작성 자동화 (`cover_letter/`)
-
-### ✅ 완료
-
-#### 뉴스 크롤링 & 트렌드 분석
-- Docker 컨테이너화
-- 네이버 뉴스 크롤링 (BeautifulSoup + MCP)
-- PostgreSQL 데이터베이스
-- 스케줄링 (매일 09:00)
-
-#### 자소서 작성 자동화 (신규 — `001-cover-letter-automation`)
-- **5단계 Streamlit 위자드** (`frontend/cover_letter_app.py`)
-  - Step 0: TXT 프로필 파싱 + LLM 구조화
-  - Step 1: 기업 3-소스 분석 (DART · Naver뉴스 · 공식홈페이지) + 7일 캐시
-  - Step 2: 자소서 문항 분석 (측정역량 + 기대수준)
-  - Step 3: 경험-문항 매핑 (LLM 적합도 평가 + 중복 경고)
-  - Step 4: 답변 생성 + 글자 수 루프(최대 3회) + AI 자가진단
-- **Google Gemini** (flash / pro / pro-thinking 3단계 티어)
-- **PostgreSQL 6개 엔티티**: user_profile, company_analysis, job_analysis, question, mapping_table, cover_letter_draft
-
-### 🚧 다음 단계
-1. DART API 연동 심화 (기업 재무 데이터)
-2. Firecrawl 연동 강화
-3. 멀티 사용자 지원
+취업 준비생을 위한 서비스. 국내 주요 기업의 뉴스를 자동 수집하고, Google Gemini LLM으로 기업 분석 → 문항 분석 → 경험 매핑 → 자소서 답변 생성까지 5단계를 자동화합니다.
 
 ---
 
-## 🚀 Quick Start (Docker)
+## 📐 아키텍처
 
-### 전체 시스템 실행
+```
+┌─────────────────────────────────────────────────────┐
+│                  docker-compose                      │
+│                                                     │
+│  postgres ──► db-init                               │
+│      │                                              │
+│      ├──► crawler (네이버 뉴스 크롤링, 매일 09:00)       │
+│      │         └── scheduler                        │
+│      │                                              │
+│      └──► cover-letter :8501 (Streamlit 위자드)      │
+│                └── google-genai (Gemini API)         │
+└─────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🚀 Quick Start
+
+### 1. 환경 변수 설정
+
 ```bash
-# 1. 모든 서비스 빌드 및 실행
+cp .env.example .env
+```
+
+`.env`에서 아래 항목을 채웁니다.
+
+| 변수 | 필수 | 설명 |
+|------|------|------|
+| `POSTGRES_PASSWORD` | ✅ | DB 비밀번호 |
+| `GEMINI_API_KEY` | ✅ | [Google AI Studio](https://aistudio.google.com/)에서 발급 |
+| `NAVER_CLIENT_ID` | ✅ | [Naver Developers](https://developers.naver.com/)에서 발급 |
+| `NAVER_CLIENT_SECRET` | ✅ | Naver Client Secret |
+| `DART_API_KEY` | 선택 | [DART 오픈API](https://opendart.fss.or.kr/)에서 발급 (기업 사업보고서 수집) |
+| `FIRECRAWL_API_KEY` | 선택 | [Firecrawl](https://firecrawl.dev/)에서 발급 (뉴스 fallback) |
+
+### 2. 빌드 & 실행
+
+```bash
 make build && make up
-
-# 또는 직접 docker-compose 사용
-docker-compose up -d
-
-# 2. 로그 확인
-make logs
-
-# 3. 크롤링 테스트 (한 번만 실행)
-make test
 ```
 
-### 개별 서비스 관리
-```bash
-# PostgreSQL만 시작
-docker-compose up postgres -d
+### 3. 자소서 위자드 접속
 
-# 크롤러만 실행 (일회성)
-docker-compose run --rm crawler
+브라우저에서 **http://localhost:8501** 열기
 
-# 스케줄러 시작 (주기적 실행)
-docker-compose up scheduler -d
+---
 
-# 자소서 작성 위자드 실행 (포트 8501)
-docker-compose up cover-letter -d
+## ✍️ 자소서 위자드 사용법
 
-# 서비스 상태 확인
-make status
-```
+Streamlit 5단계 위자드 (`frontend/cover_letter_app.py`)
+
+### Step 0 — 내 프로필 등록
+- 경력기술서 또는 자기소개 텍스트를 **TXT 파일로 업로드** 하거나 **텍스트 직접 붙여넣기**
+- LLM이 자동으로 이름·경험 목록·글쓰기 스타일을 JSON으로 구조화
+- 추출 결과를 편집 후 저장
+
+### Step 1 — 기업·직무 분석
+- 기업명과 지원 직무 입력
+- 3가지 소스에서 자동 수집 (7일 캐시):
+  - DART 사업보고서 (`DART_API_KEY` 설정 시)
+  - 네이버 뉴스 (5건 미만이면 Firecrawl fallback)
+  - 공식 홈페이지 인재상·비전 페이지
+- 자소서 문항 목록 입력 → LLM이 측정역량·기대수준 분석
+
+### Step 2 — 문항 분석
+- 각 문항의 측정 역량, 기대 수준, 목표 글자 수 확인
+- 내용 수정 후 다음 단계로 진행
+
+### Step 3 — 경험-문항 매핑
+- LLM이 내 경험과 각 문항의 적합도를 1~5점으로 평가
+- **score ≥ 3인 경험만 표시** (primary / supporting / background 분류)
+- 동일 경험을 여러 문항에 중복 사용 시 ⚠️ 경고 표시
+- 활용 유형 직접 수정 후 확정
+
+### Step 4 — 답변 생성
+- LLM이 매핑된 경험 기반으로 답변 초안 생성
+- **글자 수 자동 루프**: 목표 범위에 들어올 때까지 최대 3회 재시도
+- **AI 자가진단**: AI 특유 표현·추상적 서술·근거 없는 내용 자동 탐지
+- 수정 지시를 입력하면 자가진단 결과를 반영해 재생성
+- 최종 확인 후 DB에 저장
+
+---
 
 ## 📋 서비스 구성
 
-- **PostgreSQL**: 뉴스 + 자소서 데이터 저장소 (포트: 5432)
-- **DB Init**: 데이터베이스 초기 설정 (뉴스 + 자소서 스키마)
-- **Crawler**: 뉴스 크롤링 서비스
-- **Scheduler**: 주기적 크롤링 실행 (매일 09:00)
-- **Cover Letter** *(신규)*: Streamlit 자소서 작성 위자드 (포트: 8501)
+| 서비스 | 포트 | 설명 |
+|--------|------|------|
+| `postgres` | 5432 | 뉴스 + 자소서 데이터 저장소 |
+| `db-init` | — | 스키마 초기화 (뉴스 + 자소서 6개 엔티티) |
+| `crawler` | — | 네이버 뉴스 크롤링 |
+| `scheduler` | — | 크롤링 주기 실행 (매일 09:00) |
+| `cover-letter` | **8501** | Streamlit 자소서 작성 위자드 |
 
-## 🛠️ 환경 설정
+---
 
-### 환경 변수 (`.env` 파일)
-
-**중요**: Naver OpenAPI 자격 증명이 필요합니다!
+## 🛠️ 환경 변수
 
 ```bash
-# Naver OpenAPI (필수!)
-# https://developers.naver.com/에서 발급
+# ── 필수 ─────────────────────────────────────────────
+POSTGRES_PASSWORD=your_secure_password_here
 NAVER_CLIENT_ID=your_naver_client_id_here
 NAVER_CLIENT_SECRET=your_naver_client_secret_here
+GEMINI_API_KEY=your_gemini_api_key_here
 
-# Database
-POSTGRES_HOST=postgres
-POSTGRES_DB=postgres
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=pg1234
+# ── 선택 (LLM 모델 오버라이드) ──────────────────────────
+GEMINI_FLASH_MODEL=gemini-2.0-flash
+GEMINI_PRO_MODEL=gemini-2.5-pro
 
-# Crawler
+# ── 선택 (기업 분석 강화) ──────────────────────────────
+DART_API_KEY=                    # DART 사업보고서
+FIRECRAWL_API_KEY=               # 뉴스 fallback
+
+# ── 크롤러 ───────────────────────────────────────────
 SEARCH_KEYWORD=당근마켓
-MAX_PAGES=3
-SORT_ORDER=date
-
-# Scheduler
-CRAWL_SCHEDULE=0 9 * * *  # 매일 09:00
-RUN_ON_START=true  # 시작 시 즉시 실행
+CRAWL_SCHEDULE=0 9 * * *
 ```
 
-### Naver OpenAPI 설정 방법
+전체 항목은 [`.env.example`](.env.example) 참고.
 
-1. [Naver Developers](https://developers.naver.com/)에 접속
-2. 애플리케이션 등록 (https://developers.naver.com/apps/#/register)
-3. "검색" API 활성화
-4. Client ID와 Client Secret을 `.env` 파일에 입력
+---
 
-## 🧪 개발 및 테스트
+## 📊 데이터베이스 스키마
 
-### 로컬 개발
+### 뉴스 크롤링
+| 테이블 | 설명 |
+|--------|------|
+| `news_articles` | 크롤링된 뉴스 기사 |
+
+### 자소서 자동화
+| 테이블 | 설명 |
+|--------|------|
+| `user_profile` | 지원자 프로필 (경험 목록, 글쓰기 스타일) |
+| `company_analysis` | 기업 분석 결과 (3-소스, 7일 캐시) |
+| `job_analysis` | 직무별 분석 결과 |
+| `question` | 자소서 문항 (측정역량, 목표 글자 수) |
+| `mapping_table` | 경험-문항 매핑 결과 |
+| `cover_letter_draft` | 생성된 답변 초안 (버전 이력) |
+
+DDL: [`db/migrations/001_cover_letter_schema.sql`](db/migrations/001_cover_letter_schema.sql)
+
+---
+
+## 🧪 개발
+
 ```bash
 # 개발용 컨테이너 접속
 make shell-crawler
@@ -120,219 +157,43 @@ make shell-crawler
 # PostgreSQL 접속
 make shell-postgres
 
-# 데이터베이스 백업
-make backup-db
+# 전체 테스트 실행
+source .venv/bin/activate
+python -m pytest tests/ -v
+
+# pre-commit 검사
+pre-commit run --all-files
 ```
 
-### 로그 확인
-```bash
-# 전체 로그
-make logs
-
-# 크롤러 로그만
-make logs-crawler
-
-# 실시간 로그 확인
-docker-compose logs -f
-```
-
-## 📊 데이터베이스 스키마
-
-### `danggn_market_urls` 테이블
-```sql
-CREATE TABLE danggn_market_urls (
-    id SERIAL PRIMARY KEY,
-    title TEXT,
-    url VARCHAR(500) NOT NULL
-);
-```
+---
 
 ## 🔧 문제 해결
 
-### 서비스 재시작
 ```bash
+# 서비스 재시작
 make restart
-```
 
-### 전체 초기화
-```bash
-make clean  # 주의: 모든 데이터가 삭제됩니다
-make build
-make up
-```
+# 전체 초기화 (데이터 삭제 주의)
+make clean && make build && make up
 
-### 개별 서비스 디버깅
-```bash
-# 크롤러 컨테이너 내부 접속
-docker-compose exec crawler /bin/bash
-
-# 한 번만 크롤링 실행 (API 버전)
+# 크롤러 한 번만 실행
 docker-compose run --rm crawler python -m crawling.news_crawling_mcp
+
+# 자소서 서비스 로그
+docker-compose logs -f cover-letter
 ```
 
-## 🔒 보안 설정
+---
 
-### 첫 번째 설정 (필수!)
+## 🔒 보안
 
 ```bash
 # 1. 환경 변수 파일 생성
 cp .env.example .env
 
-# 2. .env 파일에서 보안 정보 수정
-# - POSTGRES_PASSWORD를 강력한 패스워드로 변경
-# - NAVER_CLIENT_ID와 NAVER_CLIENT_SECRET 입력 (https://developers.naver.com/)
-nano .env  # 또는 선호하는 에디터 사용
+# 2. .env 수정 (패스워드, API 키 입력)
+nano .env
 ```
 
-### 환경별 실행
-
-**개발 환경:**
-```bash
-# 개발용 설정으로 실행
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
-```
-
-**프로덕션 환경:**
-```bash
-# 프로덕션용 설정으로 실행
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-```
-
-### 보안 체크리스트
-
-- [ ] `.env` 파일에서 기본 패스워드 변경
-- [ ] Naver OpenAPI 자격 증명 입력 (https://developers.naver.com/)
-- [ ] 프로덕션에서는 SSL/TLS 연결 사용
-- [ ] 정기적인 보안 업데이트 적용
-- [ ] 로그 모니터링 설정
-
-자세한 내용은 [SECURITY.md](./SECURITY.md)를 참고하세요.
-
----
-
-## Intro.
-- 개요: 국내 주요 기업의 산업 트렌드를 분석하여 제공하는 서비스
-- 배경: 취준하면서 자소서 쓸때 기업 산업트렌드 분석을 반복하며 관련 서비스가 있으면 좋겠다고 느낌
-
-- 시퀀스
-    1. 매일 1번씩 국내 대기업 관련 뉴스를 크롤링
-        - 주기적으로 크롤링하다 ip차단될 경우 존재?
-    2. 매주 1번씩 크롤링된 데이터에서 정보를 요약함
-        - 구현 어떻게 할지… ML적으로 어떻게 풀지?
-        - 원본 데이터를 모두 저장하고 → 요약하고 → 그걸로 새로운 데이터 생성
-    3. 등록된 사용자에게 요약된 정보를 메일로 전달
-        - 각각 사용자마다 관심있는 기업/직무별로 구분해서 메일 보내야할듯
-        - 웹사이트는 어떻게 구축해야할지..
-
-- 서비스 분리
-    1. 크롤링
-        - `selenium`
-    2. api 서버: steamlit(ui, 웹사이트와의 통신)
-        - `fastAPI`
-    3. ML: 실제로 데이터 요약하고 생성
-        - `transformers`, `pandas` → `vllm` (서빙하기 위해), `sglang` 을 써서 serving해보는거 추천. 실제로 왜 쓰는지 스터디 해보는거 추천!!
-    4. 스케줄러: 매일/매주 크롤링, 메일 보내도록 지정
-        - `airflow` ??? → 리눅스 환경이라면 크론탭 이용해서 그냥 스케줄링 하는것도 괜찮음
-    5. db: db 관리 → 크롤링한 데이터를 rdb를 어떻게 저장할지도 고민 필요(스키마 설계)
-        - `sql`, `pandas`
-    6. vector-db: (관계형 DB와는 데이터 구조와 검색 방식이 완전히 다르므로, 전문 데이터베이스를 독립적으로 운영하는 것이 효율적입니다.) ← 라고 하는데 진짜 필요할지..?
-        - 특정 키워드, 내용 기준으로 데이터를 모은다고 할 경우 필요할수도..
-
------
-# Milestone
-
-## 1주 차: 데이터 수집 및 저장 (Foundation)
-
-🎯 주간 목표: 크롤링으로 데이터를 수집 --> Docker 컨테이너로 실행되는 DB에 적재하는 파이프라인 구축
-
-### Day 1-2: 학습 및 기본 테스트
-- 학습:
-    - [ ] `requests`, Naver OpenAPI 사용법
-    - [ ] PostgreSQL 기본 (`CREATE`, `INSERT`, `SELECT`)
-- 구현:
-    - [ ] `docker pull postgres` 실행 및 접속
-    - [ ] 로컬에서 뉴스 기사 제목/본문 크롤링 테스트
-
-### Day 3-6: 구현 및 통합
-- 학습:
-  -  [ ] Python DB 연결 (`SQLAlchemy` 또는 `psycopg2`)
-- 구현:
-    - [ ] `crawler.py`: 뉴스 기사(제목, 본문, URL 등) 수집 스크립트 작성
-    - [ ] `database.py`: DB 연결 및 수집 데이터 `INSERT` 로직 구현
-    - [ ] `docker-compose.yml` (v1): `postgres` 서비스 정의
-
-🏁 1주 차 마일스톤: `crawler.py` 실행 시, Docker 컨테이너 DB에 뉴스 원문이 적재됨
-
----
-
-## 2주 차: 핵심 로직 (ML) 및 컨테이너화
-
-🎯 주간 목표: DB에 쌓인 데이터를 ML 모델로 요약하고, 전체 파이프라인(크롤러, 요약기, DB)을 `docker-compose`로 통합합니다.
-
-### Day 1: 학습 및 모델 테스트
-- 학습:
-    - [ ] HuggingFace `transformers` 라이브러리
-    - [ ] 요약 파이프라인 사용법 (e.g., `gogamza/kobart-summarization`)
-- 구현:
-    - [ ] 로컬에서 DB 데이터로 요약 기능 테스트
-
-### Day 2-5: 구현 및 Docker화
-- 학습:
-    - [ ] `Dockerfile` 작성법
-- 구현:
-    - [ ] `summarizer.py`: DB에서 기사를 `SELECT` -> 모델로 요약 -> 결과를 DB에 `UPDATE`
-    - [ ] `Dockerfile` 작성 (crawler, summarizer 각각)
-    - [ ] `docker-compose.yml` (v2): `crawler`, `summarizer` 서비스 추가 (`depends_on` 설정)
-
-🏁 2주 차 마일스톤: `docker-compose up` 명령어로 크롤링과 요약이 순차적으로 실행되고 DB에 저장됨
-
----
-
-## 3주 차: 결과 시각화 (UI) 및 기본 자동화
-
-🎯 주간 목표: 사용자가 요약된 결과를 볼 수 있는 웹 UI를 만들고, 데이터 수집/요약을 주기적으로 실행되도록 구성합니다.
-
-### Day 1: 학습 및 UI 테스트
-- 학습:
-    - [ ] `Streamlit` 기본 사용법 (`st.title`, `st.dataframe`)
-- 구현:
-    - [ ] Streamlit으로 `pandas` DataFrame 출력 테스트
-
-### Day 2-5: 구현 및 자동화
-- 학습:
-    - [ ] 경량 스케줄링 (e.g., Python `time.sleep` 루프)
-- 구현:
-    - [ ] `app.py`: Streamlit 앱 작성 (DB 연결 -> 요약 결과 로드 -> 화면 출력)
-    - [ ] `Dockerfile` 작성 (streamlit용)
-    - [ ] `docker-compose.yml` (v3): `streamlit` 서비스 추가 (포트 `8501` 노출)
-    - [ ] `scheduler` 서비스 추가 (e.g., 24시간마다 `crawler`와 `summarizer`를 실행하는 Python 스크립트)
-
-🏁 3주 차 마일스톤: `docker-compose up` 실행 후, `localhost:8501` 접속 시 요약된 뉴스 목록이 웹에 표시됨
-
----
-
-## 4주 차: 폴리싱 및 선택적 기능 추가
-
-🎯 주간 목표: 프로젝트를 완성도 있게 마무리하고(README 필수), 핵심 기능 외의 부가 기능을 구현합니다.
-
-### Day 1-3: 문서화 및 리팩토링
-- 학습:
-    - [ ] `README.md` 작성법 (아키텍처 다이어그램 등)
-    - [ ] `.env` 파일을 이용한 환경변수 관리 (`python-dotenv`)
-- 구현:
-    - [ ] README.md 작성 (필수)
-        - [ ] 프로젝트 개요, 아키텍처 다이어그램, 실행 방법 (`docker-compose up`) 포함
-    - [ ] 코드 리팩토링 (DB 접속 정보 등 `.env`로 분리)
-
-### Day 4-6: 선택적 기능 추가
-- 학습:
-    - [ ] Python `smtplib` (메일 발송)
-- 구현:
-    - [ ] (Optional) `emailer.py`: DB에서 요약본을 가져와 메일로 발송하는 스크립트 작성
-    - [ ] (Optional) `scheduler`가 `emailer.py`도 실행하도록 추가
-
-🏁 최종 마일스톤: 누구나 `README.md`를 보고 프로젝트를 손쉽게 실행할 수 있음
-
-✅ **CI/CD Balanced Mode 적용 완료** (2026-02-19)
-- 📊 [검증 요약](docs/BALANCED_MODE_SUMMARY.md) - 100% 완료, 모든 기준 충족
-- 📋 [상세 검증 보고서](docs/BALANCED_MODE_REVIEW_REPORT.md) - 세부 검증 내역
+- `.env` 파일은 절대 git에 커밋하지 않습니다 (`.gitignore` 설정됨)
+- 자세한 내용은 [SECURITY.md](./SECURITY.md) 참고
