@@ -20,7 +20,7 @@
 **Scale/Scope**: 단일 사용자 로컬 MVP, 6개 DB 엔티티, 5개 서비스 모듈
 
 **LLM Tier 전략**:
-- Tier 1 `flash`: `gemini-2.0-flash` — 수집/요약/매핑 (저비용)
+- Tier 1 `flash`: `gemini-2.5-flash` — 수집/요약/매핑 (저비용)
 - Tier 2 `pro`: `gemini-2.5-pro` — 자소서 초안/전략 (중비용)
 - Tier 3 `pro-thinking`: `gemini-2.5-pro` + thinking mode — 자가진단/마무리 (고비용)
 - 환경 변수: `GEMINI_API_KEY` (required), `GEMINI_FLASH_MODEL`, `GEMINI_PRO_MODEL`

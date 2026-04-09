@@ -11,7 +11,7 @@ from typing import Literal
 
 Tier = Literal["flash", "pro", "pro-thinking"]
 
-_FLASH_DEFAULT = "gemini-2.0-flash"
+_FLASH_DEFAULT = "gemini-2.5-flash"
 _PRO_DEFAULT = "gemini-2.5-pro"
 
 _TIER_TEMPERATURE: dict[str, float] = {
