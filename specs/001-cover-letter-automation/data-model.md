@@ -72,6 +72,7 @@ CREATE TABLE company_analysis (
     industry_trends     TEXT,          -- 업계 동향 (최근 3년)
     competitive_edge    TEXT,          -- 경쟁사 대비 특장점
     news_summary        TEXT,          -- 최신 뉴스 요약 (별도 갱신)
+    dart_summary        TEXT,          -- DART 사업보고서 요약 (주요 제품·시장현황·연구개발)
     news_updated_at     TIMESTAMPTZ,   -- 뉴스만 별도 갱신 시각
     source_urls         TEXT[] DEFAULT '{}',
     user_overrides      JSONB DEFAULT '{}',
