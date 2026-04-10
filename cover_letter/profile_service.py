@@ -1,5 +1,6 @@
 """프로필 서비스 — 파일 파싱, LLM 프로필 추출, DB 저장/로드."""
 
+import io
 import json
 import os
 import pathlib
@@ -23,12 +24,19 @@ def _get_conn():
     )
 
 
-def parse_input(text: str | None, file_bytes: bytes | None) -> str:
-    """텍스트 직접 붙여넣기 또는 TXT 파일 바이트에서 문자열 추출.
+def parse_input(
+    text: str | None,
+    file_bytes: bytes | None,
+    filename: str = "",
+) -> str:
+    """텍스트 직접 붙여넣기 또는 파일 바이트에서 문자열 추출.
+
+    지원 형식: TXT, MD (UTF-8 디코드), DOCX (python-docx 단락 추출)
 
     Args:
         text: Streamlit text_area에서 받은 문자열 (없으면 None)
-        file_bytes: st.file_uploader에서 받은 TXT 파일 bytes (없으면 None)
+        file_bytes: st.file_uploader에서 받은 파일 bytes (없으면 None)
+        filename: 업로드된 파일명. 확장자로 형식을 판별한다.
 
     Returns:
         처리된 텍스트 문자열
@@ -37,7 +45,19 @@ def parse_input(text: str | None, file_bytes: bytes | None) -> str:
         ValueError: text와 file_bytes 모두 None이거나 빈 값인 경우
     """
     if file_bytes is not None:
-        decoded = file_bytes.decode("utf-8", errors="replace").strip()
+        ext = pathlib.Path(filename).suffix.lower() if filename else ".txt"
+
+        if ext == ".docx":
+            import docx  # python-docx
+
+            doc = docx.Document(io.BytesIO(file_bytes))
+            decoded = "\n".join(
+                p.text for p in doc.paragraphs if p.text.strip()
+            ).strip()
+        else:
+            # .txt, .md — UTF-8 디코드
+            decoded = file_bytes.decode("utf-8", errors="replace").strip()
+
         if decoded:
             return decoded
 
