@@ -38,8 +38,8 @@ cp .env.example .env
 | `GEMINI_API_KEY` | ✅ | [Google AI Studio](https://aistudio.google.com/)에서 발급 |
 | `NAVER_CLIENT_ID` | ✅ | [Naver Developers](https://developers.naver.com/)에서 발급 |
 | `NAVER_CLIENT_SECRET` | ✅ | Naver Client Secret |
-| `DART_API_KEY` | 선택 | [DART 오픈API](https://opendart.fss.or.kr/)에서 발급 (기업 사업보고서 수집) |
-| `FIRECRAWL_API_KEY` | 선택 | [Firecrawl](https://firecrawl.dev/)에서 발급 (뉴스 fallback) |
+| `DART_API_KEY` | ✅ | [DART 오픈API](https://opendart.fss.or.kr/)에서 발급 (기업 사업보고서 수집) |
+| `FIRECRAWL_API_KEY` | ✅ | [Firecrawl](https://firecrawl.dev/)에서 발급 (JD·인재상·뉴스 fallback) |
 
 ### 2. 빌드 & 실행
 
@@ -58,16 +58,17 @@ make build && make up
 Streamlit 5단계 위자드 (`frontend/cover_letter_app.py`)
 
 ### Step 0 — 내 프로필 등록
-- 경력기술서 또는 자기소개 텍스트를 **TXT 파일로 업로드** 하거나 **텍스트 직접 붙여넣기**
+- 경력기술서 또는 자기소개 텍스트를 **TXT·MD·DOCX 파일로 업로드** 하거나 **텍스트 직접 붙여넣기**
 - LLM이 자동으로 이름·경험 목록·글쓰기 스타일을 JSON으로 구조화
 - 추출 결과를 편집 후 저장
 
 ### Step 1 — 기업·직무 분석
 - 기업명과 지원 직무 입력
-- 3가지 소스에서 자동 수집 (7일 캐시):
-  - DART 사업보고서 (`DART_API_KEY` 설정 시)
+- 4가지 소스에서 자동 수집 (7일 캐시):
+  - DART 사업보고서 (`DART_API_KEY` 필수)
   - 네이버 뉴스 (5건 미만이면 Firecrawl fallback)
-  - 공식 홈페이지 인재상·비전 페이지
+  - 공식 홈페이지 인재상·비전 페이지 (Firecrawl, `FIRECRAWL_API_KEY` 필수)
+  - JD(직무기술서) 자동 수집 (Firecrawl→PDF폴백→수기 입력)
 - 자소서 문항 목록 입력 → LLM이 측정역량·기대수준 분석
 
 ### Step 2 — 문항 분석
@@ -138,13 +139,16 @@ CRAWL_SCHEDULE=0 9 * * *
 | 테이블 | 설명 |
 |--------|------|
 | `user_profile` | 지원자 프로필 (경험 목록, 글쓰기 스타일) |
-| `company_analysis` | 기업 분석 결과 (3-소스, 7일 캐시) |
+| `company_analysis` | 기업 분석 결과 (4-소스, 7일 캐시) |
 | `job_analysis` | 직무별 분석 결과 |
+| `jd` | 직무기술서 JD (Firecrawl→PDF폴백→수기) |
 | `question` | 자소서 문항 (측정역량, 목표 글자 수) |
 | `mapping_table` | 경험-문항 매핑 결과 |
-| `cover_letter_draft` | 생성된 답변 초안 (버전 이력) |
+| `cover_letter_draft` | 생성된 답변 초안 (버전 이력, 환각 재시도 카운트) |
 
-DDL: [`db/migrations/001_cover_letter_schema.sql`](db/migrations/001_cover_letter_schema.sql)
+DDL:
+- [`db/migrations/001_cover_letter_schema.sql`](db/migrations/001_cover_letter_schema.sql)
+- [`db/migrations/002_add_jd_entity.sql`](db/migrations/002_add_jd_entity.sql)
 
 ---
 

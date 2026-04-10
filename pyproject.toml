@@ -8,11 +8,11 @@ dependencies = [
     "psycopg2-binary",
     "requests",
     "beautifulsoup4",
+    "dart-fss",
+    "firecrawl-py",
+    "pdfminer.six",
+    "python-docx",
 ]
-
-[project.optional-dependencies]
-dart = ["dart-fss"]
-firecrawl = ["firecrawl-py"]
 
 [tool.black]
 line-length = 88

@@ -108,6 +108,8 @@ CREATE TABLE IF NOT EXISTS cover_letter_draft (
     char_count              INT NOT NULL GENERATED ALWAYS AS (LENGTH(text)) STORED,
     self_diagnosis_issues   JSONB DEFAULT '[]',
     -- [{"issue": "AI특유표현", "text": "...", "suggestion": "..."}]
+    hallucination_retries   INT NOT NULL DEFAULT 0,
+    -- 환각 방지 재생성 횟수 (FR-011b, char_limit retry와 별도 카운트)
     generation_params       JSONB DEFAULT '{}',
     -- {"model": "gemini-2.5-pro", "attempt": 1, "user_instruction": "더 구체적으로"}
     status                  VARCHAR(20) NOT NULL DEFAULT 'draft',
