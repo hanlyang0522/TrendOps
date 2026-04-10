@@ -5,12 +5,13 @@ import streamlit as st
 from cover_letter import (
     company_service,
     generation_service,
+    jd_service,
     mapping_service,
     profile_service,
     question_service,
 )
 
-st.set_page_config(page_title="자소서 도우미", page_icon="✍️", layout="wide")
+st.set_page_config(page_title="자소서 도우미", page_icon="✍️", layout="centered")
 
 STEPS = [
     "프로필 등록",
@@ -57,12 +58,12 @@ def render_step0() -> None:
         "경력 자료(포트폴리오, 이전 자소서 등)를 업로드하거나 직접 붙여넣으세요."
     )
 
-    tab_upload, tab_paste = st.tabs(["📁 TXT 파일 업로드", "✏️ 텍스트 붙여넣기"])
+    tab_upload, tab_paste = st.tabs(["📁 파일 업로드", "✏️ 텍스트 붙여넣기"])
 
     with tab_upload:
         uploaded = st.file_uploader(
-            "TXT 파일을 업로드하세요 (여러 파일 가능)",
-            type=["txt"],
+            "파일을 업로드하세요 (TXT·MD·DOCX, 여러 파일 가능)",
+            type=["txt", "md", "docx"],
             accept_multiple_files=True,
         )
 
@@ -88,7 +89,7 @@ def render_step0() -> None:
         if uploaded:
             for f in uploaded:
                 try:
-                    text = profile_service.parse_input(None, f.read())
+                    text = profile_service.parse_input(None, f.read(), filename=f.name)
                     texts.append(text)
                     file_names.append(f.name)
                 except ValueError:
@@ -289,6 +290,54 @@ def _render_company_job_editor(ca: dict, ja: dict) -> None:
             height=80,
             key="ja_pain",
         )
+
+    # JD 섹션: 자동 수집 결과 or 수기 입력 폼
+    with st.expander("📋 직무기술서(JD)"):
+        jd_data = st.session_state.get("jd_data")
+        if jd_data is None:
+            jd_data = jd_service.load_jd(ja["id"])
+            if jd_data:
+                st.session_state["jd_data"] = jd_data
+
+        if jd_data and jd_data.get("raw_text"):
+            source_badge = {
+                "firecrawl": "🌐 Firecrawl 자동 수집",
+                "pdf": "📄 PDF 자동 수집",
+                "manual": "✏️ 수기 입력",
+            }.get(jd_data.get("source_type", ""), "")
+            st.caption(f"{source_badge} | {jd_data.get('source_url', '')}")
+            competencies = jd_data.get("required_competencies", [])
+            if competencies:
+                st.markdown("**요구 역량:** " + " · ".join(competencies))
+            st.text_area(
+                "JD 원문",
+                value=jd_data.get("raw_text", ""),
+                height=150,
+                key="jd_raw",
+            )
+        else:
+            st.info("JD 자동 수집에 실패했습니다. 직접 입력하거나 생략할 수 있습니다.")
+            manual_jd = st.text_area(
+                "JD 수기 입력 (선택)",
+                height=150,
+                placeholder="채용공고에서 직무 기술서를 복사·붙여넣으세요.",
+                key="jd_manual",
+            )
+            if st.button("💾 JD 저장", key="jd_save"):
+                if manual_jd.strip():
+                    saved_id = jd_service.save_jd(
+                        ja["id"],
+                        {
+                            "success": True,
+                            "text": manual_jd.strip(),
+                            "source_url": "",
+                            "source_type": "manual",
+                            "required_competencies": [],
+                        },
+                    )
+                    st.session_state["jd_data"] = jd_service.load_jd(ja["id"])
+                    st.success(f"JD 저장 완료 (ID: {saved_id})")
+                    st.rerun()
 
     col1, col2 = st.columns(2)
     with col1:
@@ -623,6 +672,64 @@ def render_step4() -> None:
                     else:
                         st.success("✅ 문제 없음")
 
+                # 환각 검증
+                hallucination_result = draft_info.get("hallucination_detected")
+                hallucination_retries = draft_info.get("hallucination_retries", 0)
+                col_h1, col_h2 = st.columns(2)
+                with col_h1:
+                    if st.button("🔎 환각 검증", key=f"hall_{q_id}"):
+                        with st.spinner("환각 여부 검증 중..."):
+                            detected = generation_service.check_hallucination(
+                                answer_text=text,
+                                mapping_entries=entries,
+                                profile=profile,
+                            )
+                            drafts[q_id]["hallucination_detected"] = detected
+                            st.session_state["drafts"] = drafts
+                        st.rerun()
+                with col_h2:
+                    if hallucination_result and st.button(
+                        "♻️ 환각 없이 재생성", key=f"hallregen_{q_id}"
+                    ):
+                        with st.spinner("환각 없는 답변 재생성 중..."):
+                            hall_result = (
+                                generation_service.regenerate_without_hallucination(
+                                    answer_params=dict(
+                                        question_id=q["id"],
+                                        question_text=q["text"],
+                                        char_limit=q.get("char_limit", 1000),
+                                        target_char_min=q.get("target_char_min", 800),
+                                        target_char_max=q.get("target_char_max", 950),
+                                        measured_competencies=q.get(
+                                            "measured_competencies", []
+                                        ),
+                                        expected_level=q.get("expected_level", ""),
+                                        company_analysis=company_analysis,
+                                        job_analysis=job_analysis,
+                                        profile=profile,
+                                        mapping_entries=entries,
+                                    ),
+                                    mapping_entries=entries,
+                                    profile=profile,
+                                )
+                            )
+                            drafts[q_id]["text"] = hall_result["text"]
+                            drafts[q_id]["hallucination_retries"] = (
+                                hallucination_retries
+                                + hall_result["hallucination_retries"]
+                            )
+                            drafts[q_id]["hallucination_detected"] = hall_result[
+                                "hallucination_detected"
+                            ]
+                            drafts[q_id]["char_count"] = len(hall_result["text"])
+                            st.session_state["drafts"] = drafts
+                        st.rerun()
+
+                if hallucination_result is True:
+                    st.error("🚨 환각 감지: 경험 목록에 없는 내용이 포함되었습니다.")
+                elif hallucination_result is False:
+                    st.success("✅ 환각 없음")
+
                 # 수동 지시 + 재생성
                 user_instruction = st.text_area(
                     "수정 지시",
@@ -672,6 +779,9 @@ def render_step4() -> None:
                                     "version": draft_info.get("version", 1),
                                 },
                                 version=draft_info.get("version", 1),
+                                hallucination_retries=draft_info.get(
+                                    "hallucination_retries", 0
+                                ),
                             )
                             drafts[q_id]["status"] = "confirmed"
                             drafts[q_id]["draft_id"] = draft_id
