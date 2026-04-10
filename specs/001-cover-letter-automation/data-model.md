@@ -1,7 +1,7 @@
 # Data Model: 자소서 작성 자동화 서비스
 
-**Branch**: `001-cover-letter-automation` | **Date**: 2026-04-09
-**Source**: spec.md Key Entities + research.md 결정 사항
+**Branch**: `001-cover-letter-automation` | **Date**: 2026-04-10 (업데이트)
+**Source**: spec.md Key Entities + research.md 결정 사항 (JD 엔티티 추가, CompanyAnalysis 필드 추가)
 
 ---
 
@@ -12,7 +12,7 @@ UserProfile
     │
     ├─── (경험 매핑 시 참조)
     │
-CompanyAnalysis ──── JobAnalysis ──── Question ──── MappingTable ──── CoverLetterDraft
+CompanyAnalysis ──── JobAnalysis ──── JD (신규) ──── Question ──── MappingTable ──── CoverLetterDraft
                                          │                │
                                          └── (문항 분석)  └── (경험 배정)
 ```
@@ -184,8 +184,9 @@ CREATE TABLE cover_letter_draft (
     char_count              INT NOT NULL GENERATED ALWAYS AS (LENGTH(text)) STORED,
     self_diagnosis_issues   JSONB DEFAULT '[]',
     -- [{"issue": "AI특유표현", "text": "...", "suggestion": "..."}]
+    hallucination_retries   INT NOT NULL DEFAULT 0,  -- 환각 방지 재생성 횟수 (FR-011b)
     generation_params       JSONB DEFAULT '{}',
-    -- {"model": "gpt-4o", "attempt": 1, "user_instruction": "더 구체적으로"}
+    -- {"model": "gemini-2.5-pro", "attempt": 1, "user_instruction": "더 구체적으로"}
     status                  VARCHAR(20) NOT NULL DEFAULT 'draft',
     -- 'draft' | 'self_diagnosed' | 'confirmed'
     created_at              TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -199,10 +200,41 @@ CREATE INDEX idx_draft_status ON cover_letter_draft(status);
 
 ---
 
+## 엔티티 7: JD (Job Description) — 신규 (2026-04-10)
+
+**목적**: 기업·직무 기반으로 자동 수집된 JD(직무기술서) 저장. JobAnalysis와 1:1 관계.
+
+```sql
+CREATE TABLE jd (
+    id                  SERIAL PRIMARY KEY,
+    job_analysis_id     INT NOT NULL REFERENCES job_analysis(id) ON DELETE CASCADE UNIQUE,
+    raw_text            TEXT,               -- 수집된 JD 원문
+    source_url          TEXT,               -- 수집 출처 URL (Firecrawl 검색 결과)
+    source_type         VARCHAR(20),        -- 'firecrawl' | 'pdf' | 'manual'
+    required_competencies TEXT[] DEFAULT '{}', -- LLM 추출 요구 역량 (매핑 우선순위 반영)
+    collected_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    user_overrides      JSONB DEFAULT '{}' -- 사용자 수정 내용
+);
+
+CREATE INDEX idx_jd_job_analysis ON jd(job_analysis_id);
+```
+
+**상태**:
+- `source_type = 'firecrawl'`: Firecrawl API로 자동 수집
+- `source_type = 'pdf'`: Firecrawl URL → pdfminer.six 추출
+- `source_type = 'manual'`: 사용자 수기 텍스트 입력
+
+**검증 규칙**:
+- `raw_text IS NOT NULL` AND `LENGTH(raw_text) > 50` → 유효한 JD로 간주
+- 유효하지 않으면 `source_type = 'manual'` 입력 안내
+
+---
+
 ## DB 마이그레이션 전략
 
-- 초기 테이블 생성: `db/migrations/001_cover_letter_schema.sql`
-- `Dockerfile.db-init`의 init 스크립트에서 실행
+- 초기 테이블 생성 (1~6 엔티티): `db/migrations/001_cover_letter_schema.sql`
+- JD 엔티티 추가 (엔티티 7): `db/migrations/002_add_jd_entity.sql`
+- `Dockerfile.db-init`의 init 스크립트에서 순서대로 실행
 - 기존 `news_articles` 테이블과 네임스페이스 충돌 없음
 
 ---
@@ -243,4 +275,12 @@ class DiagnosisIssue:
     issue: str
     text: str
     suggestion: str
+
+@dataclass
+class JD:
+    job_analysis_id: int
+    raw_text: str
+    source_type: str      # 'firecrawl' | 'pdf' | 'manual'
+    source_url: str = ""
+    required_competencies: list[str] = field(default_factory=list)
 ```

@@ -1,13 +1,13 @@
 # Research: 자소서 작성 자동화 서비스
 
-**Branch**: `001-cover-letter-automation` | **Date**: 2026-04-09
-**Status**: Complete — 모든 NEEDS CLARIFICATION 해소됨 (결정 8개)
+**Branch**: `001-cover-letter-automation` | **Date**: 2026-04-10 (업데이트)
+**Status**: Complete — 모든 NEEDS CLARIFICATION 해소됨 (결정 12개, 2026-04-10 결정 4개 추가)
 
 ---
 
-## 결정 1: 사용자 정보 입력 방식
+## 결정 1: 사용자 정보 입력 방식 (2026-04-10 업데이트)
 
-**Decision**: Streamlit 텍스트 영역 직접 붙여넣기 + TXT 파일 업로드(`st.file_uploader`). UTF-8 decode 후 내장 `str` 처리.
+**Decision**: Streamlit 텍스트 영역 직접 붙여넣기 + 텍스트 파일 업로드(`st.file_uploader`). 지원 형식: TXT(`str.decode('utf-8')`), MD(동일), DOCX(`python-docx`로 단락 추출). UTF-8 decode 후 내장 `str` 처리.
 
 **Rationale**:
 - PDF·DOCX 파싱은 MVP 범위 외로 제외 (Clarify Session 2026-04-09 Q1)
@@ -16,7 +16,7 @@
 - 두 입력 방식은 OR 조건으로 처리: 둘 중 하나만 채워도 진행 가능
 
 **Alternatives considered**:
-- PyMuPDF + python-docx: PDF·DOCX 지원이지만 MVP 단계에서 복잡도 대비 사용자 이득 낮음
+- PyMuPDF + python-docx: PDF·DOCX 지원이지만 MVP 단계에서 복잡도 대비 사용자 이득 낮음 (포트폴리오 PDF는 MVP 범위 외 유지)
 - Google Docs 연동: 외부 OAuth 필요, MVP 범위 외
 
 ---
@@ -159,32 +159,110 @@ else:
 
 ---
 
-## 결정 8: 기업 정보 3-소스 수집 전략
+## 결정 8: 기업 정보 3-소스 수집 전략 (2026-04-10 업데이트)
 
 **Decision**: 기업 분석 정보를 3개 소스에서 병렬 수집하여 통합:
 1. **DART API** (`dart-fss` 라이브러리 또는 금감원 OpenAPI 직접 호출) — 최근 3개년 사업보고서에서 주요 제품·서비스, 지식재산권, 시장현황, 주요계약·연구개발 섹션 추출
 2. **Naver News API** (기존 TrendOps `crawling/` 모듈 재사용) — 직무·기업 관련 최신 뉴스 수집. 결과 불충분 시 Firecrawl API로 fallback
-3. **공식 홈페이지 스크래핑** (`requests` + `BeautifulSoup4`, 기존 TrendOps 스택) — 인재상, 비전·미션 페이지 수집
+3. **Firecrawl API** (`firecrawl-py`) — 인재상·기업문화·비전·미션 수집 (BeautifulSoup4에서 전환)
+
+**2026-04-10 변경사항**:
+- DART API: optional → **필수**. `DART_API_KEY` 미설정 시 서비스 startup validation 실패
+- 공식 홈페이지 수집: BeautifulSoup4 → **Firecrawl API** 전환 (JS 렌더링 현대 기업 홈페이지 대응)
+- `FIRECRAWL_API_KEY`: optional → **필수**
 
 **수집 오케스트레이션**: `company_service.py`의 `get_or_analyze_company()`가 3개 수집기를 순차 호출 후 결과를 통합하여 Gemini Flash로 단일 요약 생성
-
-**Rationale**:
-- DART 사업보고서: 지원 직무 관련 사업 배경·시장 맥락을 객관적 공시 데이터로 확보 → 자소서 신뢰도 향상
-- Naver News: 기존 TrendOps 크롤링 모듈 재사용으로 추가 개발 비용 최소화
-- 공식 홈페이지: 인사담당자가 실제 홈페이지에서 확인하는 인재상·비전을 직접 수집
-- 각 소스 독립 실패 허용 (graceful degradation): DART API Key 미설정이나 홈페이지 스크래핑 실패 시 해당 소스만 스킵하고 나머지로 계속 진행
 
 **수집기 파일 구조**:
 ```
 cover_letter/collectors/
-├── dart_collector.py     # DART API 사업보고서 수집
+├── dart_collector.py     # DART API 사업보고서 (필수 소스)
 ├── naver_collector.py    # Naver News API + Firecrawl fallback
-└── website_crawler.py   # 공식 홈페이지 인재상·비전 스크래핑
+├── website_crawler.py    # Firecrawl API로 인재상·문화 (전환)
+└── jd_crawler.py         # 신규 — Firecrawl JD 자동 검색 (결정 10)
 ```
 
-**환경 변수 추가**: `DART_API_KEY` (optional — 미설정 시 DART 소스 스킵), `FIRECRAWL_API_KEY` (optional — Naver fallback용)
+**환경 변수**: `DART_API_KEY` (**필수**), `FIRECRAWL_API_KEY` (**필수**), `NAVER_CLIENT_ID`·`NAVER_CLIENT_SECRET`
 
 **Alternatives considered**:
-- DART만 단독 사용: 뉴스 최신성·홈페이지 인재상 누락으로 자소서 맥락 부족
-- 단일 웹 검색 API(Google Custom Search 등): 결과 범위 불확실, 공시 데이터 누락
+- DART optional 유지: 핵심 공시 데이터 소스 보장 불가
+- BeautifulSoup4 인재상 크롤링 유지: JS 렌더링 미지원으로 주요 대기업 홈페이지 수집 실패율 높음
 - LangChain Agent 자율 수집: MVP 복잡도 과잉, 수집 결과 재현성 낮음
+
+---
+
+## 결정 9: Streamlit UI 레이아웃 전략 (2026-04-10)
+
+**Decision**: `st.set_page_config(layout="centered")`로 중앙 정렬, 텍스트 출력 영역은 `st.markdown()` 사용하여 자동 확장. 편집 가능 텍스트는 `st.text_area`에 내용 길이 기반 동적 높이 지정.
+
+**구현 패턴**:
+```python
+st.set_page_config(layout="centered", page_title="자소서 작성 도우미")
+
+# 읽기 전용 출력 (자동 확장, 스크롤 없음)
+st.markdown(text)
+
+# 편집 가능 영역 (동적 높이)
+lines = max(10, text.count('\n') + 5)
+st.text_area("답변 수정", value=text, height=lines * 20)
+```
+
+**Rationale**:
+- SC-006: `layout="centered"`로 기본 최대 700px 너비 제한 → 양옆 padding 자동 확보
+- SC-006: `st.markdown()`은 텍스트 길이에 따라 DOM이 자동 확장 → 스크롤 없이 전체 내용 표시
+- `st.text_area(height=고정값)`은 내용이 길면 박스 내 스크롤 발생 → 동적 높이로 해결
+
+**Alternatives considered**:
+- `st.text_area(height=500)` 고정: SC-006 미충족
+- `st.components.v1.html()` 커스텀 컴포넌트: 불필요한 복잡도
+
+---
+
+## 결정 10: JD 자동 수집 전략 (2026-04-10)
+
+**Decision**: 기업명·직무 기반 Firecrawl API 검색(채용 플랫폼 자동 탐색) → PDF 감지 시 `pdfminer.six` 텍스트 추출 → 실패 시 사용자 수기 입력.
+
+**검색 전략**:
+```python
+query = f"{company_name} {job_title} 채용공고 JD 직무기술서"
+```
+
+**폴백 체인**: Firecrawl 검색 실패 → PDF 파싱 실패 → `st.text_area("JD를 직접 붙여넣기하세요")`
+
+**Rationale**:
+- 채용공고 URL 수기 입력보다 자동 검색이 사용자 편의성 대폭 향상
+- 실제 채용공고 중 PDF 형태가 다수 (공공기관·대기업 공채) → pdfminer 폴백 필수
+- 자동 수집 실패 시에도 수기 입력으로 워크플로 중단 없이 진행
+
+**환경 변수**: `FIRECRAWL_API_KEY` (결정 8과 공유, 필수)
+
+**Alternatives considered**:
+- 사용자 URL 직접 입력: 사용자가 채용공고 URL을 찾아야 하는 불편, 자동화 목적에 역행
+- playwright 직접 크롤링: 채용 플랫폼 봇 차단, 설정 복잡도 높음
+
+---
+
+## 결정 11: 환각 방지 검증 전략 (2026-04-10)
+
+**Decision**: 규칙 기반 선처리(매핑 텍스트 vs 답변 고유명사 대조) + Gemini Flash 보조 판정 2단계 검증. 환각 감지 시 자동 재생성, 재생성 횟수는 글자 수 retry(FR-009a)와 별도 카운트.
+
+**검증 로직 개요**:
+```python
+def check_hallucination(answer: str, mapping_entries: list[dict], profile: dict) -> bool:
+    # 1단계: 규칙 기반 — 연도·수치·영문 고유명 패턴 추출 후 매핑 경험 텍스트 비교
+    # 2단계: LLM 보조 — "경험 목록에 없는 내용 포함 여부" 이진 판정
+    # Returns: True(환각 감지됨)
+```
+
+**재생성 루프**: 최대 3회, `hallucination_retry_count`는 `char_limit_retry_count`와 독립
+
+**LLM 프롬프트**: `prompts/hallucination_check.txt` — "HALLUCINATION" / "OK" 이진 반환
+
+**Rationale**:
+- FR-011b 요건: 규칙 기반 + LLM 보조 2단계
+- 글자 수 retry와 분리: 사용자 의도와 무관한 내부 품질 루프는 별도 카운트로 투명성 확보
+- Gemini Flash 사용: 환각 판정은 저비용 tier로 충분
+
+**Alternatives considered**:
+- 자가진단 프롬프트 통합: 환각(사실 오류)과 AI 표현 검증은 성격이 달라 분리가 명확
+- 100% 규칙 기반만: 한국어 고유명 추출 한계로 LLM 보조 필요
