@@ -1,7 +1,8 @@
 # Service Interface Contracts: 자소서 작성 자동화 서비스
 
-**Branch**: `001-cover-letter-automation` | **Date**: 2026-04-09
+**Branch**: `001-cover-letter-automation` | **Date**: 2026-04-10 (업데이트)
 **Source**: spec.md FR 요건 + data-model.md + research.md 결정 사항
+**변경사항**: profile_service.py DOCX 지원 추가, company_service.py Firecrawl 전환, jd_service.py 신규, generation_service.py 환각 방지 추가
 
 이 문서는 `cover_letter/` 서비스 모듈의 공개 함수 시그니처를 정의합니다.
 각 서비스는 단일 파일, 단순 함수 집합으로 구현합니다 (클래스 불필요 — YAGNI).
@@ -54,23 +55,27 @@ def call(
 
 ## 1. profile_service.py
 
-**목적**: 파일 파싱, LLM 프로필 추출, DB 저장/로드
+**목적**: 파일 파싱(TXT·MD·DOCX), LLM 프로필 추출, DB 저장/로드
 
 ```python
 # cover_letter/profile_service.py
 
-def parse_input(text: str | None, file_bytes: bytes | None) -> str:
-    """텍스트 직접 붙여넣기 또는 TXT 파일 바이트에서 문자열 추출.
+def parse_input(text: str | None, file_bytes: bytes | None, filename: str = "") -> str:
+    """텍스트 직접 붙여넣기 또는 텍스트 파일 바이트에서 문자열 추출.
+
+    지원 형식: TXT, MD (UTF-8 decode), DOCX (python-docx 단락 추출)
 
     Args:
         text: Streamlit text_area 에서 받은 문자열 (없으면 None)
-        file_bytes: st.file_uploader에서 받은 TXT 파일 bytes (없으면 None)
+        file_bytes: st.file_uploader에서 받은 파일 bytes (없으면 None)
+        filename: 파일명 (확장자로 파싱 방식 결정, 예: "portfolio.docx")
 
     Returns:
         처리된 텍스트 문자열
 
     Raises:
         ValueError: text와 file_bytes 모두 None이거나 빈 값인 경우
+        ValueError: 지원하지 않는 파일 형식인 경우
     """
 
 def extract_profile(texts: list[str]) -> dict:
@@ -120,9 +125,9 @@ def get_or_analyze_company(company_name: str) -> dict:
     캐시 유효기간 7일.
     - 캐시 히트 (analyzed_at < 7일): naver_collector로 뉴스만 재검색하여 news_summary 갱신 후 반환
     - 캐시 미스: 3개 소스 순차 수집 후 Gemini Flash로 통합 요약:
-      1. DART API (dart_collector.py) — 최근 3개년 사업보고서 주요 섹션. DART_API_KEY 없으면 스킵
+      1. DART API (dart_collector.py) — 최근 3개년 사업보고서 (DART_API_KEY 필수)
       2. Naver News API (naver_collector.py) — 직무 관련 최신 뉴스. 5건 미만 시 Firecrawl fallback
-      3. 공식 홈페이지 (website_crawler.py) — 인재상·비전 스크래핑. 실패 시 None으로 스킵
+      3. Firecrawl API (website_crawler.py) — 인재상·기업문화·비전 수집 (FIRECRAWL_API_KEY 필수)
 
     Args:
         company_name: 기업명 (예: "삼성전자")
@@ -305,6 +310,104 @@ def apply_diagnosis_and_regenerate(draft_id: int) -> dict:
         generate_answer()와 동일한 구조의 새 draft dict
     """
 
+def check_hallucination(
+    answer_text: str,
+    mapping_entries: list[dict],
+    profile: dict,
+) -> bool:
+    """답변에 매핑 경험 텍스트에 없는 내용이 포함되었는지 검증 (FR-011b).
+
+    1단계: 규칙 기반 — 연도·수치·영문 고유명 패턴 추출 후 매핑 경험 텍스트와 비교
+    2단계: Gemini Flash 보조 판정 — "경험 목록에 없는 내용 포함 여부" 이진 판정
+
+    Args:
+        answer_text: 검증할 답변 텍스트
+        mapping_entries: 확정된 MappingEntry 목록 (experience_key, rationale 포함)
+        profile: 사용자 프로필 (experiences 필드 사용)
+
+    Returns:
+        True: 환각 감지됨 (재생성 필요)
+        False: 정상 (경험 텍스트로 근거 확인됨)
+    """
+
+def regenerate_without_hallucination(
+    draft_id: int,
+    mapping_entries: list[dict],
+    profile: dict,
+    max_retries: int = 3,
+) -> dict:
+    """환각 방지 루프: 환각 감지 시 자동 재생성. retry_count는 별도 카운트.
+
+    Args:
+        draft_id: 환각이 감지된 CoverLetterDraft ID
+        mapping_entries: 확정된 매핑 목록
+        profile: 사용자 프로필
+        max_retries: 환각 재생성 최대 횟수 (기본 3회)
+
+    Returns:
+        {
+            "draft_id": int,
+            "text": str,
+            "hallucination_retry_count": int,  # char_limit retry와 별도
+            "hallucination_resolved": bool
+        }
+    """
+
 def confirm_draft(draft_id: int) -> None:
     """최종 답변을 confirmed 상태로 저장."""
+```
+
+---
+
+## 6. jd_service.py — 신규 (2026-04-10)
+
+**목적**: 기업명·직무 기반 JD 자동 수집 (Firecrawl), PDF 파싱 폴백, 수기 입력 안내
+
+```python
+# cover_letter/jd_service.py
+
+def collect_jd(company_name: str, job_title: str) -> dict:
+    """기업명·직무 기반으로 Firecrawl API를 통해 채용공고 JD를 자동 수집.
+
+    수집 순서:
+    1. Firecrawl API로 "{company_name} {job_title} 채용공고 JD 직무기술서" 검색
+    2. 콘텐츠가 PDF인 경우 pdfminer.six로 텍스트 추출
+    3. 수집·파싱 모두 실패 시 {"success": False, "text": None, "source_type": "manual"} 반환
+
+    Args:
+        company_name: 기업명 (예: "삼성전자")
+        job_title: 직무명 (예: "소프트웨어 개발")
+
+    Returns:
+        {
+            "success": bool,
+            "text": str | None,         # 수집된 JD 원문
+            "source_url": str,          # 수집 출처 URL
+            "source_type": str          # 'firecrawl' | 'pdf' | 'manual'
+        }
+    """
+
+def extract_required_competencies(jd_text: str) -> list[str]:
+    """JD 텍스트에서 LLM으로 요구 역량 목록 추출. (매핑 우선순위 반영용)
+
+    Args:
+        jd_text: JD 원문
+
+    Returns:
+        요구 역량 목록 (예: ["Python", "데이터 분석", "협업"])
+    """
+
+def save_jd(job_analysis_id: int, jd_data: dict) -> int:
+    """수집된 JD 및 요구 역량을 DB에 저장.
+
+    Args:
+        job_analysis_id: 연결된 직무 분석 ID
+        jd_data: collect_jd() 반환값 + required_competencies
+
+    Returns:
+        생성된 jd.id
+    """
+
+def load_jd(job_analysis_id: int) -> dict | None:
+    """저장된 JD 조회. 없으면 None 반환."""
 ```

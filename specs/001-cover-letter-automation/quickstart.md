@@ -1,6 +1,6 @@
 # Quickstart: 자소서 작성 자동화 서비스 (로컬 실행)
 
-**Branch**: `001-cover-letter-automation` | **Date**: 2026-04-09
+**Branch**: `001-cover-letter-automation` | **Date**: 2026-04-10 (업데이트)
 
 ---
 
@@ -8,7 +8,9 @@
 
 - Docker & Docker Compose 설치
 - Python 3.13 + 가상환경 (`.venv`)
-- OpenAI API Key 발급
+- DART API Key (금융감독원 Open DART, **필수**)
+- Firecrawl API Key (firecrawl.dev, **필수**)
+- Gemini API Key (Google AI Studio, **필수**)
 
 ---
 
@@ -24,10 +26,16 @@ cp .env.example .env
 # 기존 필수 항목 (변경 없음)
 POSTGRES_PASSWORD=your_secure_password
 
-# 자소서 서비스 추가 항목
-OPENAI_API_KEY=sk-...
-OPENAI_MODEL=gpt-4o          # 기본값, 교체 가능
-COVER_LETTER_MODULE_ENABLED=true
+# 자소서 서비스 — LLM
+GEMINI_API_KEY=AIza...
+GEMINI_FLASH_MODEL=gemini-2.5-flash   # 기본값
+GEMINI_PRO_MODEL=gemini-2.5-pro       # 기본값
+
+# 자소서 서비스 — 데이터 수집 (모두 필수)
+DART_API_KEY=your_dart_api_key
+FIRECRAWL_API_KEY=fc-...
+NAVER_CLIENT_ID=your_naver_client_id
+NAVER_CLIENT_SECRET=your_naver_client_secret
 ```
 
 ---
@@ -38,10 +46,12 @@ COVER_LETTER_MODULE_ENABLED=true
 # PostgreSQL 컨테이너 실행
 docker compose up -d postgres
 
-# 자소서 서비스 테이블 생성
+# 자소서 서비스 테이블 생성 (001 + 002 순서대로 실행)
 docker compose run --rm db-init
 # 또는 직접 실행:
-# psql -h localhost -U postgres -d postgres -f db/migrations/001_cover_letter_schema.sql
+# psql -h localhost -U postgres -d postgres \
+#   -f db/migrations/001_cover_letter_schema.sql \
+#   -f db/migrations/002_add_jd_entity.sql
 ```
 
 ---
@@ -53,10 +63,14 @@ source .venv/bin/activate
 
 pip install \
   google-genai \
-  streamlit
+  streamlit \
+  dart-fss \
+  firecrawl-py \
+  pdfminer.six \
+  python-docx
 ```
 
-> **참고**: 기존 `psycopg2-binary`, `requests` 등은 이미 설치된 상태.
+> **참고**: `psycopg2-binary`, `requests`, `beautifulsoup4` 등은 이미 설치된 상태.
 
 ---
 
@@ -83,12 +97,12 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 
 ## 6. 첫 사용 흐름
 
-1. **프로필 등록** → 포트폴리오 PDF 또는 합격 자소서 파일 업로드
+1. **프로필 등록** → 포트폴리오·합격 자소서 파일(TXT·MD·DOCX) 업로드 또는 텍스트 직접 붙여넣기
 2. **프로필 검토** → 추출된 경험·역량·문체 요약 확인 후 "저장" 클릭
-3. **기업·직무 입력** → 기업명 + 직무명 입력 후 "분석 시작"
+3. **기업·직무 입력** → 기업명 + 직무명 입력 후 "분석 시작" (JD 자동 수집 포함)
 4. **문항 입력** → 자소서 문항 텍스트 + 글자 수 제한 입력
-5. **매핑 테이블 확인** → 자동 생성된 경험-문항 매핑을 수정 후 "확정"
-6. **답변 생성** → "초안 생성" 클릭 → 자가진단 결과 검토 → 필요 시 수정 지시 반복
+5. **매핑 테이블 확인** → 자동 생성된 경험-문항 매핑 수정 후 "확정"
+6. **답변 생성** → "초안 생성" → 환각 방지 검증 자동 실행 → 자가진단 결과 검토 → 수정 지시 반복
 
 ---
 
@@ -96,7 +110,12 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 
 | 변수명 | 필수 | 기본값 | 설명 |
 |--------|------|--------|------|
-| `OPENAI_API_KEY` | ✅ | — | OpenAI API 인증 키 |
-| `OPENAI_MODEL` | | `gpt-4o` | 사용할 LLM 모델명 |
+| `GEMINI_API_KEY` | ✅ | — | Google Gemini API 인증 키 |
+| `GEMINI_FLASH_MODEL` | | `gemini-2.5-flash` | Flash 티어 모델명 |
+| `GEMINI_PRO_MODEL` | | `gemini-2.5-pro` | Pro/Pro-Thinking 티어 모델명 |
+| `DART_API_KEY` | ✅ | — | 금융감독원 Open DART API 키 |
+| `FIRECRAWL_API_KEY` | ✅ | — | Firecrawl API 키 (JD·인재상 크롤링) |
+| `NAVER_CLIENT_ID` | ✅ | — | Naver 검색 API 클라이언트 ID |
+| `NAVER_CLIENT_SECRET` | ✅ | — | Naver 검색 API 클라이언트 시크릿 |
 | `COMPANY_CACHE_DAYS` | | `7` | 기업 분석 캐시 유효 기간(일) |
 | `COVER_LETTER_MAX_RETRIES` | | `3` | 글자 수 재작성 최대 횟수 |
