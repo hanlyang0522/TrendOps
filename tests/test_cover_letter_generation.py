@@ -289,3 +289,134 @@ class TestConfirmDraft:
             generation_params={"attempt": 2},
         )
         assert result == 99
+
+    @patch("cover_letter.generation_service._get_conn")
+    def test_hallucination_retries_param_saved(self, mock_conn):
+        """hallucination_retries 파라미터가 DB에 전달된다."""
+        mock_cursor = MagicMock()
+        mock_cursor.fetchone.return_value = (100,)
+        mock_cursor.__enter__ = MagicMock(return_value=mock_cursor)
+        mock_cursor.__exit__ = MagicMock(return_value=False)
+        mock_c = MagicMock()
+        mock_c.__enter__ = MagicMock(return_value=mock_c)
+        mock_c.__exit__ = MagicMock(return_value=False)
+        mock_c.cursor.return_value = mock_cursor
+        mock_conn.return_value = mock_c
+
+        result = generation_service.confirm_draft(
+            question_id=1,
+            mapping_table_id=None,
+            text="답변",
+            self_diagnosis_issues=[],
+            generation_params={},
+            hallucination_retries=2,
+        )
+        assert result == 100
+        execute_args = mock_cursor.execute.call_args[0][1]
+        # hallucination_retries = 2 가 params에 포함됐는지 확인
+        assert 2 in execute_args
+
+
+# ============================================================
+# check_hallucination 테스트
+# ============================================================
+class TestCheckHallucination:
+    @patch("cover_letter.generation_service.llm_client.call")
+    def test_returns_false_when_not_hallucinated(self, mock_call):
+        """LLM이 hallucinated=false 반환 시 False."""
+        mock_call.return_value = '{"hallucinated": false, "reason": "정상"}'
+        result = generation_service.check_hallucination(
+            answer_text="A사 인턴 경험에서 개발했습니다.",
+            mapping_entries=_ENTRIES,
+            profile=_PROFILE,
+        )
+        assert result is False
+
+    @patch("cover_letter.generation_service.llm_client.call")
+    def test_returns_true_when_hallucinated(self, mock_call):
+        """LLM이 hallucinated=true 반환 시 True."""
+        mock_call.return_value = '{"hallucinated": true, "reason": "없는 프로젝트"}'
+        result = generation_service.check_hallucination(
+            answer_text="없는프로젝트 팀장으로 활동했습니다.",
+            mapping_entries=_ENTRIES,
+            profile=_PROFILE,
+        )
+        assert result is True
+
+    @patch("cover_letter.generation_service.llm_client.call")
+    def test_returns_false_on_json_parse_error(self, mock_call):
+        """LLM 응답이 파싱 불가능하면 False(보수적 판단)."""
+        mock_call.return_value = "잘못된 응답"
+        result = generation_service.check_hallucination(
+            answer_text="답변 텍스트",
+            mapping_entries=_ENTRIES,
+            profile=_PROFILE,
+        )
+        assert result is False
+
+
+# ============================================================
+# regenerate_without_hallucination 테스트
+# ============================================================
+class TestRegenerateWithoutHallucination:
+    _ANSWER_PARAMS = dict(
+        question_id=1,
+        question_text="지원 동기를 서술하시오.",
+        char_limit=1000,
+        target_char_min=800,
+        target_char_max=950,
+        measured_competencies=[],
+        expected_level="",
+        company_analysis=_COMPANY,
+        job_analysis=_JOB,
+        profile=_PROFILE,
+        mapping_entries=_ENTRIES,
+        user_instruction="",
+    )
+
+    @patch("cover_letter.generation_service.check_hallucination", return_value=False)
+    @patch("cover_letter.generation_service.generate_answer")
+    def test_returns_without_retrying_if_no_hallucination(self, mock_gen, mock_hall):
+        """첫 시도에서 환각이 없으면 재생성하지 않는다."""
+        mock_gen.return_value = {
+            "text": "정상 답변",
+            "char_count": 850,
+            "in_range": True,
+            "attempt": 1,
+        }
+
+        result = generation_service.regenerate_without_hallucination(
+            answer_params=self._ANSWER_PARAMS,
+            mapping_entries=_ENTRIES,
+            profile=_PROFILE,
+        )
+
+        assert result["hallucination_retries"] == 0
+        assert result["hallucination_detected"] is False
+        assert mock_gen.call_count == 1
+
+    @patch(
+        "cover_letter.generation_service.check_hallucination",
+        side_effect=[True, True, True, True],
+    )
+    @patch("cover_letter.generation_service.generate_answer")
+    def test_retries_up_to_max_retries_then_gives_up(self, mock_gen, mock_hall):
+        """MAX_RETRIES 초과 후에도 환각이 있으면 hallucination_detected=True 반환."""
+        mock_gen.return_value = {
+            "text": "환각 포함 답변",
+            "char_count": 900,
+            "in_range": True,
+            "attempt": 1,
+        }
+        original_max = generation_service.MAX_RETRIES
+        generation_service.MAX_RETRIES = 3
+
+        result = generation_service.regenerate_without_hallucination(
+            answer_params=self._ANSWER_PARAMS,
+            mapping_entries=_ENTRIES,
+            profile=_PROFILE,
+        )
+
+        generation_service.MAX_RETRIES = original_max
+        assert result["hallucination_retries"] == 3
+        assert result["hallucination_detected"] is True

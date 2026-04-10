@@ -43,6 +43,39 @@ class TestParseInput:
         with pytest.raises(ValueError):
             profile_service.parse_input("", b"")
 
+    def test_md_file_returns_decoded_text(self):
+        """filename 확장자가 .md일 때 UTF-8 디코드로 처리한다."""
+        md_bytes = b"# \xed\x83\x80\xec\x9d\xb4\xed\x8b\x80\n\xeb\x82\xb4\xec\x9a\xa9"  # UTF-8 '타이틀\n내용'
+        result = profile_service.parse_input(None, md_bytes, filename="resume.md")
+        assert "타이틀" in result
+        assert "내용" in result
+
+    def test_txt_with_filename_returns_decoded_text(self):
+        """filename 확장자가 .txt일 때도 UTF-8 디코드로 처리한다."""
+        txt_bytes = "파이썬 개발자".encode("utf-8")
+        result = profile_service.parse_input(None, txt_bytes, filename="data.txt")
+        assert "파이썬" in result
+
+    @patch("docx.Document")
+    def test_docx_file_extracts_paragraph_text(self, mock_doc_cls):
+        """filename 확장자가 .docx일 때 python-docx 단락 텍스트를 추출한다."""
+        mock_para1 = MagicMock()
+        mock_para1.text = "백엔드 인턴 경험"
+        mock_para2 = MagicMock()
+        mock_para2.text = "FastAPI 개발"
+        mock_para_empty = MagicMock()
+        mock_para_empty.text = ""
+
+        mock_doc = MagicMock()
+        mock_doc.paragraphs = [mock_para1, mock_para_empty, mock_para2]
+        mock_doc_cls.return_value = mock_doc
+
+        result = profile_service.parse_input(
+            None, b"fake-docx-bytes", filename="portfolio.docx"
+        )
+        assert "백엔드 인턴 경험" in result
+        assert "FastAPI 개발" in result
+
 
 # ============================================================
 # extract_profile 테스트
