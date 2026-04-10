@@ -1,7 +1,8 @@
-"""답변 생성 + 글자 수 루프 + 자가진단 서비스.
+"""답변 생성 + 글자 수 루프 + 자가진단 + 환각 방지 서비스.
 
 글자 수 범위(target_char_min~target_char_max)를 충족할 때까지
 최대 MAX_RETRIES(3)회 재생성합니다.
+환각 감지 시 추가 재생성 (hallucination_retries 별도 카운트).
 """
 
 import json
@@ -14,7 +15,10 @@ from cover_letter import llm_client
 
 _ANSWER_PROMPT_PATH = pathlib.Path(__file__).parent / "prompts" / "answer_generate.txt"
 _DIAG_PROMPT_PATH = pathlib.Path(__file__).parent / "prompts" / "self_diagnosis.txt"
-MAX_RETRIES = 3
+_HALLUCINATION_PROMPT_PATH = (
+    pathlib.Path(__file__).parent / "prompts" / "hallucination_check.txt"
+)
+MAX_RETRIES = int(os.getenv("COVER_LETTER_MAX_RETRIES", "3"))
 
 
 def _get_conn():
@@ -253,6 +257,7 @@ def confirm_draft(
     self_diagnosis_issues: list[dict],
     generation_params: dict,
     version: int = 1,
+    hallucination_retries: int = 0,
 ) -> int:
     """답변 초안을 DB에 저장.
 
@@ -263,6 +268,7 @@ def confirm_draft(
         self_diagnosis_issues: 자가진단 문제 목록
         generation_params: 생성 파라미터 (모델명, 시도 횟수, 사용자 지시 등)
         version: 버전 번호
+        hallucination_retries: 환각 방지 재생성 횟수
 
     Returns:
         생성된 cover_letter_draft.id
@@ -274,8 +280,9 @@ def confirm_draft(
                 """
                 INSERT INTO cover_letter_draft
                     (question_id, mapping_table_id, version, text,
-                     self_diagnosis_issues, generation_params, status)
-                VALUES (%s, %s, %s, %s, %s, %s, 'draft')
+                     self_diagnosis_issues, hallucination_retries,
+                     generation_params, status)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, 'draft')
                 RETURNING id
                 """,
                 (
@@ -284,6 +291,7 @@ def confirm_draft(
                     version,
                     text,
                     json.dumps(self_diagnosis_issues, ensure_ascii=False),
+                    hallucination_retries,
                     json.dumps(generation_params, ensure_ascii=False),
                 ),
             )
@@ -291,3 +299,97 @@ def confirm_draft(
             return int(row[0])
     finally:
         conn.close()
+
+
+def check_hallucination(
+    answer_text: str,
+    mapping_entries: list[dict],
+    profile: dict,
+) -> bool:
+    """답변에 경험 목록에 없는 내용(환각)이 포함되었는지 LLM으로 검증.
+
+    Args:
+        answer_text: 검증할 자소서 답변 텍스트
+        mapping_entries: 매핑 테이블 엔트리 목록 (experience_key 포함)
+        profile: 프로필 dict (experiences 키 포함)
+
+    Returns:
+        True: 환각 감지됨, False: 정상
+    """
+    prompt_template = _HALLUCINATION_PROMPT_PATH.read_text(encoding="utf-8")
+
+    # 사용된 경험만 추출
+    experiences = profile.get("experiences", [])
+    used_keys = {e.get("experience_key") for e in mapping_entries}
+    used_experiences = [
+        exp for exp in experiences if exp.get("key") in used_keys
+    ] or experiences
+
+    exp_lines = "\n".join(
+        f"- [{e.get('key', '')}] {e.get('title', '')}: {e.get('description', '')}"
+        for e in used_experiences
+    )
+
+    prompt = prompt_template.replace("{experiences}", exp_lines).replace(
+        "{answer_text}", answer_text
+    )
+
+    try:
+        raw = llm_client.call(prompt, tier="flash")
+        clean = (
+            raw.strip()
+            .removeprefix("```json")
+            .removeprefix("```")
+            .removesuffix("```")
+            .strip()
+        )
+        data = json.loads(clean)
+        return bool(data.get("hallucinated", False))
+    except Exception:
+        return False
+
+
+def regenerate_without_hallucination(
+    answer_params: dict,
+    mapping_entries: list[dict],
+    profile: dict,
+) -> dict:
+    """환각이 없는 답변이 나올 때까지 최대 MAX_RETRIES회 재생성.
+
+    Args:
+        answer_params: generate_answer 호출 파라미터 dict
+        mapping_entries: 매핑 테이블 엔트리 목록
+        profile: 프로필 dict
+
+    Returns:
+        {
+            "text": str,
+            "hallucination_retries": int,  # 재생성 횟수
+            "hallucination_detected": bool,  # 최종 답변에 여전히 환각 있는지
+        }
+    """
+    retries = 0
+    result = generate_answer(**answer_params)
+    text: str = result.get("text", "")
+
+    while retries < MAX_RETRIES:
+        if not check_hallucination(text, mapping_entries, profile):
+            break
+        retries += 1
+        # 재생성 지시를 포함해 다시 생성
+        patched_params = {
+            **answer_params,
+            "user_instruction": (
+                (answer_params.get("user_instruction") or "")
+                + "\n\n[주의] 제공된 경험 목록에 없는 고유명사·프로젝트명·수치를 절대 사용하지 마시오."
+            ),
+        }
+        result = generate_answer(**patched_params)
+        text = result.get("text", "")
+
+    still_hallucinated = check_hallucination(text, mapping_entries, profile)
+    return {
+        "text": text,
+        "hallucination_retries": retries,
+        "hallucination_detected": still_hallucinated,
+    }
