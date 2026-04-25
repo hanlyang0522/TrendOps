@@ -47,7 +47,7 @@ specs/001-cover-letter-automation/
 ├── quickstart.md        # Phase 1 산출물 (환경변수·의존성 업데이트)
 ├── contracts/
 │   └── service-interfaces.md  # Phase 1 산출물 (JD 수집·환각 방지 시그니처 추가)
-└── tasks.md             # Phase 2 산출물 (/speckit.tasks 명령 — plan 단계에서 미생성)
+└── tasks.md             # Phase 2 산출물 (T001~T051, 2026-04-10 생성·완료)
 ```
 
 ### Source Code (repository root)

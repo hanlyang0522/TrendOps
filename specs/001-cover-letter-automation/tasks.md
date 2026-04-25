@@ -62,7 +62,7 @@
 
 - [X] T015 [P] [US2] `cover_letter/prompts/company_analysis.txt` 작성 — DART 사업보고서(주요 제품·시장현황·연구개발) + Naver 뉴스 요약 + Firecrawl 인재상·비전 3-소스 통합 분석 프롬프트 (overview / culture_and_values / industry_trends / competitive_edge / dart_summary 섹션)
 - [X] T016 [P] [US2] `cover_letter/prompts/question_analysis.txt` 작성 — 자소서 문항의 측정 역량(`measured_competencies: list[str]`) + 신입 기대 수준(`expected_level: str`) JSON 출력 분석 프롬프트
-- [X] T017 [P] [US2] `cover_letter/collectors/dart_collector.py` 구현 — `collect_dart_reports(company_name: str, years: int = 3) -> dict` — `dart-fss`로 기업 코드 검색 후 최근 N개년 사업보고서 수집, 목표 섹션(주요제품·지식재산권·시장현황·연구개발) 텍스트 추출. `DART_API_KEY` 미설정 시 `{}` 반환 + 로그 경고
+- [X] T017 [P] [US2] `cover_letter/collectors/dart_collector.py` 구현 — `collect_dart_reports(company_name: str, years: int = 3) -> dict` — `dart-fss`로 기업 코드 검색 후 최근 N개년 사업보고서 수집, 목표 섹션(주요제품·지식재산권·시장현황·연구개발) 텍스트 추출. `DART_API_KEY` 미설정 시 `{success: False, reason: "DART_API_KEY 미설정"}` 반환 (수집기 단독 호출 soft-fail; 앱 시작 시 hard-fail은 T008 처리)
 - [X] T018 [P] [US2] `cover_letter/collectors/naver_collector.py` 구현 — `collect_news(company_name: str, job_title: str) -> list[dict]` — Naver Search API로 `{company_name} {job_title}` 뉴스 수집, 결과 5건 미만 시 `firecrawl-py` `FirecrawlApp.search()` fallback (FIRECRAWL_API_KEY 환경변수 사용)
 - [X] T019 [P] [US2] `cover_letter/collectors/website_crawler.py` 구현 — `crawl_company_website(company_name: str) -> dict | None` — `firecrawl-py` `FirecrawlApp.search("{company_name} 채용 인재상 기업문화 비전")` 으로 공식 홈페이지 인재상·기업문화·비전 수집 (FIRECRAWL_API_KEY 필수), 실패 시 `None` 반환 + 로그
 - [X] T020 [P] [US2] `cover_letter/collectors/jd_crawler.py` 생성·구현 — `crawl_jd(company_name: str, job_title: str) -> dict` — `firecrawl-py` `FirecrawlApp.search("{company_name} {job_title} 채용공고 JD 직무기술서")` 호출, 응답이 PDF URL인 경우 `pdfminer.six` `extract_text(io.BytesIO(content))` 폴백, 수집·파싱 모두 실패 시 `{"success": False, "text": None, "source_type": "manual"}` 반환
@@ -116,10 +116,19 @@
 
 - [X] T044 `frontend/cover_letter_app.py` — `st.set_page_config(layout="centered")` 적용 + 모든 답변 텍스트 출력 영역 `st.markdown()` 자동 확장 (스크롤 없이 전체 표시), `st.text_area`에 `height=max(300, len(text)//2)` 동적 높이 적용 (SC-006)
 - [X] T045 `frontend/cover_letter_app.py` 5단계 위자드 통합 — `st.session_state["step"]` 기반 단계 진행, "이전 단계" 복귀 버튼 (현재 단계 데이터 `st.session_state`에 임시 보존), 각 단계 완료 데이터 누적
-- [ ] T046 [P] DB 마이그레이션 통합 검증 — Docker Compose 환경에서 `001_cover_letter_schema.sql` → `002_add_jd_entity.sql` 순서 실행, Generated Column(`target_char_min`·`target_char_max`) 정상 동작, `hallucination_retries DEFAULT 0` 확인
+- [X] T046 [P] DB 마이그레이션 통합 검증 — Docker Compose 환경에서 `001_cover_letter_schema.sql` → `002_add_jd_entity.sql` 순서 실행, Generated Column(`target_char_min`·`target_char_max`) 정상 동작, `hallucination_retries DEFAULT 0` 확인
 - [X] T047 [P] pre-commit 전체 통과 — `pre-commit run --all-files` (black·isort·flake8·mypy·trailing-whitespace·end-of-file-fixer)
-- [ ] T048 코드리뷰·리팩토링 — `cover_letter/` 전체 파일 공통 DB 연결 패턴 점검, `llm_client.call()` 중복 호출 패턴 검토, Constitution Check 최종 확인
+- [X] T048 코드리뷰·리팩토링 — `cover_letter/` 전체 파일 공통 DB 연결 패턴 점검, `llm_client.call()` 중복 호출 패턴 검토, Constitution Check 최종 확인
 - [X] T049 [P] `README.md` 업데이트 — 자소서 서비스 실행 방법 추가: `GEMINI_API_KEY·DART_API_KEY·FIRECRAWL_API_KEY 설정 → make up → localhost:8501`
+
+---
+
+## Phase 8: FR-003e — 소스 진단 UI (3-소스 실패 가시화)
+
+**목적**: 인재상/기업문화·DART·JD 수집 단계별 성공/실패 상태를 사용자 화면에 요약 표시 (FR-003e)
+
+- [X] T050 [P] [US2] 소스 진단 페이로드 표준화 — `company_service._full_analysis()` 반환 `source_status` dict 형식 확정: `{dart: {success, reason}, website: {success, reason}}`, `jd_service.collect_jd()` 반환 `error_reason` 필드 포함 여부 검증 및 단위 테스트 추가 (`tests/test_cover_letter_company.py` + `tests/test_cover_letter_jd.py`)
+- [X] T051 [US2] Step 1 UI 소스 상태 렌더링 — `frontend/cover_letter_app.py` Step 1 완료 후 `source_status` 기반 `st.warning()` (DART/인재상 실패 사유), JD 수집 실패 시 `st.caption()` 로 `error_reason` 표시; 단위 테스트: `test_cover_letter_company.py`에 UI mock 검증 케이스 추가
 
 ---
 
@@ -177,12 +186,13 @@ Phase 7 통합 (T044~T049)
 - US3 → US4: 답변 생성·환각 방지·자가진단 추가 (**10개 태스크**, T034~T043)
 - 통합 마무리 (**6개 태스크**, T044~T049)
 
-**총 태스크**: 49개
-**US1 MVP**: 17개 | **US2 추가**: 14개 | **US3 추가**: 5개 | **US4 추가**: 10개 | **통합**: 6개 (총 52개 — T002a 포함)
+**총 태스크**: 51개 (T001~T049 + T050·T051)
+**US1 MVP**: 17개 | **US2 추가**: 14개 | **US3 추가**: 5개 | **US4 추가**: 10개 | **통합**: 6개 | **진단 UI**: 2개 (T050·T051)
 **병렬 기회**: 27개 태스크 ([P] 마킹) — Phase 4에서 최대 6개 동시 실행 가능
 
 **신규 파일 목록** (plan.md 기준):
 - `cover_letter/models.py` — T006
+- `cover_letter/db.py` — T048 (공통 DB 연결 리팩토링)
 - `cover_letter/jd_service.py` — T021
 - `cover_letter/collectors/jd_crawler.py` — T020
 - `cover_letter/prompts/hallucination_check.txt` — T036

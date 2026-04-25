@@ -1,0 +1,20 @@
+{
+  "transitions": [
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": null,
+      "by": "extension",
+      "at": "2026-04-24T00:17:52.612Z"
+    }
+  ],
+  "currentStep": "tasks",
+  "stepHistory": {
+    "tasks": {
+      "startedAt": "2026-04-24T00:17:52.612Z",
+      "completedAt": null
+    }
+  },
+  "status": "active",
+  "specName": "Cover Letter Automation"
+}
