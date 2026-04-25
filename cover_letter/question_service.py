@@ -1,26 +1,12 @@
 """문항 분석 서비스 — LLM 기반 문항 역량 분석 및 DB 저장."""
 
 import json
-import os
 import pathlib
 
-import psycopg2
-
 from cover_letter import llm_client
+from cover_letter.db import get_conn as _get_conn
 
 _PROMPT_PATH = pathlib.Path(__file__).parent / "prompts" / "question_analysis.txt"
-
-
-def _get_conn():
-    """DB 연결 반환."""
-    return psycopg2.connect(
-        host=os.getenv("POSTGRES_HOST", "localhost"),
-        database=os.getenv("POSTGRES_DB", "postgres"),
-        user=os.getenv("POSTGRES_USER", "postgres"),
-        password=os.getenv("POSTGRES_PASSWORD", ""),
-        port=int(os.getenv("POSTGRES_PORT", "5432")),
-        connect_timeout=10,
-    )
 
 
 def analyze_question(
