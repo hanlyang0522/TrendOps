@@ -3,8 +3,33 @@
 spec: FR-003d — 기업명·직무명으로 JD 자동 수집.
 """
 
+import logging
 import os
 from typing import Any
+
+logger = logging.getLogger(__name__)
+
+
+def _normalize_firecrawl_items(results: Any) -> list[dict[str, Any]]:
+    """Firecrawl search 응답을 dict 리스트로 정규화."""
+    if isinstance(results, list):
+        return [item for item in results if isinstance(item, dict)]
+
+    if hasattr(results, "web") or hasattr(results, "news"):
+        items: list[dict[str, Any]] = []
+        for group in (getattr(results, "web", None), getattr(results, "news", None)):
+            for entry in group or []:
+                if isinstance(entry, dict):
+                    items.append(entry)
+                elif hasattr(entry, "model_dump"):
+                    items.append(entry.model_dump())
+        return items
+
+    if isinstance(results, dict):
+        raw_items = results.get("data") or results.get("web") or []
+        return [item for item in raw_items if isinstance(item, dict)]
+
+    return []
 
 
 def crawl_jd(company_name: str, job_title: str) -> dict:
@@ -25,6 +50,7 @@ def crawl_jd(company_name: str, job_title: str) -> dict:
             "text": str | None,       # JD 원문
             "source_url": str,        # 출처 URL
             "source_type": str,       # 'firecrawl' | 'pdf' | 'manual'
+            "error_reason": str,      # 실패 원인(성공 시 빈 문자열)
         }
     """
     result = _crawl_via_firecrawl(company_name, job_title)
@@ -36,6 +62,7 @@ def crawl_jd(company_name: str, job_title: str) -> dict:
         "text": None,
         "source_url": "",
         "source_type": "manual",
+        "error_reason": result.get("error_reason", "JD 자동 수집 실패"),
     }
 
 
@@ -49,6 +76,7 @@ def _crawl_via_firecrawl(company_name: str, job_title: str) -> dict:
             "text": None,
             "source_url": "",
             "source_type": "manual",
+            "error_reason": "firecrawl 미설치",
         }
 
     api_key = os.getenv("FIRECRAWL_API_KEY", "")
@@ -58,6 +86,7 @@ def _crawl_via_firecrawl(company_name: str, job_title: str) -> dict:
             "text": None,
             "source_url": "",
             "source_type": "manual",
+            "error_reason": "FIRECRAWL_API_KEY 미설정",
         }
 
     try:
@@ -65,11 +94,25 @@ def _crawl_via_firecrawl(company_name: str, job_title: str) -> dict:
         query = f"{company_name} {job_title} 채용공고 JD 직무기술서 자격요건 우대사항"
         results: Any = app.search(query, limit=3)
 
-        items = results if isinstance(results, list) else (results.get("data") or [])
+        items = _normalize_firecrawl_items(results)
+        if not items:
+            return {
+                "success": False,
+                "text": None,
+                "source_url": "",
+                "source_type": "manual",
+                "error_reason": "검색 결과 없음",
+            }
+
+        last_reason = "검색 결과에서 텍스트 추출 실패"
         for item in items:
             url: str = item.get("url") or item.get("sourceURL") or ""
             content: str = (
-                item.get("markdown") or item.get("content") or item.get("text") or ""
+                item.get("markdown")
+                or item.get("content")
+                or item.get("text")
+                or item.get("description")
+                or ""
             ).strip()
 
             # PDF URL이 감지되고 텍스트가 없으면 pdfminer 폴백
@@ -81,7 +124,9 @@ def _crawl_via_firecrawl(company_name: str, job_title: str) -> dict:
                         "text": pdf_text,
                         "source_url": url,
                         "source_type": "pdf",
+                        "error_reason": "",
                     }
+                last_reason = "PDF 텍스트 추출 실패"
                 continue
 
             if content:
@@ -90,11 +135,32 @@ def _crawl_via_firecrawl(company_name: str, job_title: str) -> dict:
                     "text": content[:5000],
                     "source_url": url,
                     "source_type": "firecrawl",
+                    "error_reason": "",
                 }
+        return {
+            "success": False,
+            "text": None,
+            "source_url": "",
+            "source_type": "manual",
+            "error_reason": last_reason,
+        }
     except Exception:
-        pass
+        logger.exception("JD 수집 실패: company=%s, job=%s", company_name, job_title)
+        return {
+            "success": False,
+            "text": None,
+            "source_url": "",
+            "source_type": "manual",
+            "error_reason": "Firecrawl 검색 호출 실패",
+        }
 
-    return {"success": False, "text": None, "source_url": "", "source_type": "manual"}
+    return {
+        "success": False,
+        "text": None,
+        "source_url": "",
+        "source_type": "manual",
+        "error_reason": "JD 자동 수집 실패",
+    }
 
 
 def _extract_pdf_from_url(url: str) -> str | None:

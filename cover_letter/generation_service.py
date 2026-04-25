@@ -9,9 +9,8 @@ import json
 import os
 import pathlib
 
-import psycopg2
-
 from cover_letter import llm_client
+from cover_letter.db import get_conn as _get_conn
 
 _ANSWER_PROMPT_PATH = pathlib.Path(__file__).parent / "prompts" / "answer_generate.txt"
 _DIAG_PROMPT_PATH = pathlib.Path(__file__).parent / "prompts" / "self_diagnosis.txt"
@@ -19,18 +18,6 @@ _HALLUCINATION_PROMPT_PATH = (
     pathlib.Path(__file__).parent / "prompts" / "hallucination_check.txt"
 )
 MAX_RETRIES = int(os.getenv("COVER_LETTER_MAX_RETRIES", "3"))
-
-
-def _get_conn():
-    """DB 연결 반환."""
-    return psycopg2.connect(
-        host=os.getenv("POSTGRES_HOST", "localhost"),
-        database=os.getenv("POSTGRES_DB", "postgres"),
-        user=os.getenv("POSTGRES_USER", "postgres"),
-        password=os.getenv("POSTGRES_PASSWORD", ""),
-        port=int(os.getenv("POSTGRES_PORT", "5432")),
-        connect_timeout=10,
-    )
 
 
 def _build_mapped_experiences_text(entries: list[dict], experiences: list[dict]) -> str:

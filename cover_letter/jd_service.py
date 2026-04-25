@@ -1,27 +1,13 @@
 """JD(직무기술서) 서비스 — 수집·저장·로드·역량 추출."""
 
 import json
-import os
 import pathlib
-
-import psycopg2
 
 from cover_letter import llm_client
 from cover_letter.collectors.jd_crawler import crawl_jd
+from cover_letter.db import get_conn as _get_conn
 
 _PROMPT_PATH = pathlib.Path(__file__).parent / "prompts" / "question_analysis.txt"
-
-
-def _get_conn():
-    """DB 연결 반환."""
-    return psycopg2.connect(
-        host=os.getenv("POSTGRES_HOST", "localhost"),
-        database=os.getenv("POSTGRES_DB", "postgres"),
-        user=os.getenv("POSTGRES_USER", "postgres"),
-        password=os.getenv("POSTGRES_PASSWORD", ""),
-        port=int(os.getenv("POSTGRES_PORT", "5432")),
-        connect_timeout=10,
-    )
 
 
 def collect_jd(company_name: str, job_title: str) -> dict:
@@ -37,6 +23,7 @@ def collect_jd(company_name: str, job_title: str) -> dict:
             "text": str | None,
             "source_url": str,
             "source_type": str,   # 'firecrawl' | 'pdf' | 'manual'
+            "error_reason": str,  # 실패 사유(성공 시 빈 문자열)
             "required_competencies": list[str],
         }
     """
@@ -49,7 +36,11 @@ def collect_jd(company_name: str, job_title: str) -> dict:
         except Exception:
             competencies = []
 
-    return {**result, "required_competencies": competencies}
+    return {
+        **result,
+        "error_reason": result.get("error_reason", ""),
+        "required_competencies": competencies,
+    }
 
 
 def extract_required_competencies(jd_text: str) -> list[str]:

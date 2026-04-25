@@ -5,26 +5,12 @@ score≥3인 경험만 매핑 결과에 포함합니다.
 """
 
 import json
-import os
 import pathlib
 
-import psycopg2
-
 from cover_letter import llm_client
+from cover_letter.db import get_conn as _get_conn
 
 _PROMPT_PATH = pathlib.Path(__file__).parent / "prompts" / "mapping_generate.txt"
-
-
-def _get_conn():
-    """DB 연결 반환."""
-    return psycopg2.connect(
-        host=os.getenv("POSTGRES_HOST", "localhost"),
-        database=os.getenv("POSTGRES_DB", "postgres"),
-        user=os.getenv("POSTGRES_USER", "postgres"),
-        password=os.getenv("POSTGRES_PASSWORD", ""),
-        port=int(os.getenv("POSTGRES_PORT", "5432")),
-        connect_timeout=10,
-    )
 
 
 def generate_mapping(

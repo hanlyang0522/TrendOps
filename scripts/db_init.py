@@ -36,6 +36,7 @@ def main() -> None:
     )
     try:
         apply_migration(conn, "/app/db/migrations/001_cover_letter_schema.sql")
+        apply_migration(conn, "/app/db/migrations/002_add_jd_entity.sql")
     finally:
         conn.close()
 
