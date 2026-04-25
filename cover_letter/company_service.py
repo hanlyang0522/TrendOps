@@ -1,29 +1,17 @@
 """기업·직무 분석 서비스 — 3-소스 수집 오케스트레이션 + DB 캐싱."""
 
 import json
-import os
+import logging
 import pathlib
 from datetime import datetime, timezone
 
-import psycopg2
-
 from cover_letter import llm_client
 from cover_letter.collectors import dart_collector, naver_collector, website_crawler
+from cover_letter.db import get_conn as _get_conn
 
 _PROMPT_PATH = pathlib.Path(__file__).parent / "prompts" / "company_analysis.txt"
 _CACHE_DAYS = 7
-
-
-def _get_conn():
-    """DB 연결 반환."""
-    return psycopg2.connect(
-        host=os.getenv("POSTGRES_HOST", "localhost"),
-        database=os.getenv("POSTGRES_DB", "postgres"),
-        user=os.getenv("POSTGRES_USER", "postgres"),
-        password=os.getenv("POSTGRES_PASSWORD", ""),
-        port=int(os.getenv("POSTGRES_PORT", "5432")),
-        connect_timeout=10,
-    )
+logger = logging.getLogger(__name__)
 
 
 def get_or_analyze_company(company_name: str) -> dict:
@@ -75,6 +63,22 @@ def get_or_analyze_company(company_name: str) -> dict:
                             (fresh_news, cached["id"]),
                         )
                     cached["news_summary"] = fresh_news
+                dart_ok = bool(cached.get("dart_summary"))
+                website_ok = bool(cached.get("culture_and_values"))
+                cached["source_status"] = {
+                    "dart": {
+                        "success": dart_ok,
+                        "reason": (
+                            "" if dart_ok else "이전 분석 시 수집 실패 (쫨시 참조)"
+                        ),
+                    },
+                    "website": {
+                        "success": website_ok,
+                        "reason": (
+                            "" if website_ok else "이전 분석 시 수집 실패 (쫨시 참조)"
+                        ),
+                    },
+                }
                 return cached
 
         # 캐시 미스: 3-소스 전체 분석
@@ -86,7 +90,8 @@ def get_or_analyze_company(company_name: str) -> dict:
 def _full_analysis(company_name: str, conn) -> dict:
     """3-소스 수집 후 LLM 통합 요약, DB 저장."""
     # 1. DART 사업보고서
-    dart_data = dart_collector.collect_dart_reports(company_name)
+    dart_result = dart_collector.collect_dart_reports_with_status(company_name)
+    dart_data = dart_result.get("data", {}) if isinstance(dart_result, dict) else {}
     dart_text = _format_dart(dart_data)
 
     # 2. Naver 뉴스
@@ -94,8 +99,30 @@ def _full_analysis(company_name: str, conn) -> dict:
     news_text = _format_news(news_articles)
 
     # 3. 홈페이지 스크래핑
-    website_data = website_crawler.crawl_company_website(company_name)
+    website_result = website_crawler.crawl_company_website_with_status(company_name)
+    website_data = (
+        website_result.get("data", {}) if isinstance(website_result, dict) else {}
+    )
     website_text = website_data.get("talent", "") if website_data else ""
+
+    source_status = {
+        "dart": {
+            "success": bool(dart_result.get("success")),
+            "reason": str(dart_result.get("reason", "")),
+        },
+        "website": {
+            "success": bool(website_result.get("success")),
+            "reason": str(website_result.get("reason", "")),
+        },
+    }
+    for source, status in source_status.items():
+        if not status["success"]:
+            logger.warning(
+                "company source collection failed: company=%s source=%s reason=%s",
+                company_name,
+                source,
+                status["reason"],
+            )
 
     # LLM 통합 요약
     prompt_template = _PROMPT_PATH.read_text(encoding="utf-8")
@@ -180,6 +207,7 @@ def _full_analysis(company_name: str, conn) -> dict:
             if hasattr(analyzed_at, "isoformat")
             else str(analyzed_at)
         ),
+        "source_status": source_status,
         "user_overrides": {},
     }
 
@@ -325,5 +353,6 @@ def _row_to_dict(row: tuple) -> dict:
         "news_summary": row[6],
         "dart_summary": row[7],
         "analyzed_at": row[8],
+        "source_status": {},
         "user_overrides": row[9] or {},
     }

@@ -37,6 +37,7 @@ class TestNaverCollector:
     def test_returns_empty_list_when_no_credentials(self, monkeypatch):
         monkeypatch.delenv("NAVER_CLIENT_ID", raising=False)
         monkeypatch.delenv("NAVER_CLIENT_SECRET", raising=False)
+        monkeypatch.delenv("FIRECRAWL_API_KEY", raising=False)
         result = naver_collector.collect_news("카카오")
         assert result == []
 
@@ -110,39 +111,33 @@ class TestWebsiteCrawler:
         result = website_crawler.crawl_company_website("카카오")
         assert result is None
 
-    @patch("cover_letter.collectors.website_crawler._find_homepage")
-    def test_returns_none_when_homepage_not_found(self, mock_find):
-        mock_find.return_value = None
+    def test_returns_none_when_no_firecrawl_key(self, monkeypatch):
+        monkeypatch.delenv("FIRECRAWL_API_KEY", raising=False)
         result = website_crawler.crawl_company_website("알수없는기업")
         assert result is None
 
-    @patch("cover_letter.collectors.website_crawler._find_homepage")
-    @patch("cover_letter.collectors.website_crawler._scrape_page")
-    def test_tries_talent_urls_first(self, mock_scrape, mock_find):
-        import sys
-
-        fake_requests = MagicMock()
-        fake_bs4 = MagicMock()
-        with patch.dict("sys.modules", {"requests": fake_requests, "bs4": fake_bs4}):
-            mock_find.return_value = "https://kakao.com"
-            mock_scrape.return_value = None  # 모든 시도 실패
-            result = website_crawler.crawl_company_website("카카오")
+    @patch("cover_letter.collectors.website_crawler.crawl_company_website_with_status")
+    def test_returns_none_when_status_failed(self, mock_status):
+        mock_status.return_value = {
+            "success": False,
+            "data": None,
+            "reason": "검색 결과 텍스트 없음",
+        }
+        result = website_crawler.crawl_company_website("알수없는기업")
         assert result is None
-        assert mock_scrape.call_count > 1  # 여러 URL 시도
 
-    @patch("cover_letter.collectors.website_crawler._find_homepage")
-    @patch("cover_letter.collectors.website_crawler._scrape_page")
-    def test_returns_dict_when_page_scraped(self, mock_scrape, mock_find):
-        fake_requests = MagicMock()
-        fake_bs4 = MagicMock()
-        with patch.dict("sys.modules", {"requests": fake_requests, "bs4": fake_bs4}):
-            mock_find.return_value = "https://kakao.com"
-            mock_scrape.return_value = {
+    @patch("cover_letter.collectors.website_crawler.crawl_company_website_with_status")
+    def test_returns_dict_when_status_success(self, mock_status):
+        mock_status.return_value = {
+            "success": True,
+            "data": {
                 "talent": "인재상 내용",
                 "vision": "",
-                "source_url": "https://kakao.com/recruit",
-            }
-            result = website_crawler.crawl_company_website("카카오")
+                "source_url": "https://kakao.com",
+            },
+            "reason": "",
+        }
+        result = website_crawler.crawl_company_website("카카오")
         assert result is not None
         assert "talent" in result
 

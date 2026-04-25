@@ -15,7 +15,11 @@ RUN pip install --no-cache-dir \
     streamlit \
     psycopg2-binary \
     requests \
-    beautifulsoup4
+    beautifulsoup4 \
+    python-docx \
+    firecrawl-py \
+    dart-fss \
+    pdfminer.six
 
 # 소스 복사
 COPY cover_letter/ ./cover_letter/

@@ -29,6 +29,8 @@ def _init_session() -> None:
         "profile": None,
         "company_analysis": None,
         "job_analysis": None,
+        "jd_data": None,
+        "jd_collect_status": None,
         "questions": [],
         "mappings": {},
         "drafts": {},
@@ -244,9 +246,36 @@ def render_step1() -> None:
                 st.error(f"직무 분석 실패: {e}")
                 return
 
+        with st.spinner("JD(직무기술서) 자동 수집 중..."):
+            jd_result = jd_service.collect_jd(company_name, job_title)
+            st.session_state["jd_collect_status"] = {
+                "success": bool(jd_result.get("success")),
+                "reason": jd_result.get("error_reason", ""),
+            }
+            if jd_result.get("success") and jd_result.get("text"):
+                jd_service.save_jd(job_analysis["id"], jd_result)
+                st.session_state["jd_data"] = jd_service.load_jd(job_analysis["id"])
+            else:
+                st.session_state["jd_data"] = None
+
         st.session_state["company_analysis"] = company_analysis
         st.session_state["job_analysis"] = job_analysis
         st.success("분석 완료!")
+
+        source_status = company_analysis.get("source_status", {}) or {}
+        source_labels = {
+            "dart": "DART 사업보고서",
+            "website": "인재상/기업문화",
+        }
+        for key, label in source_labels.items():
+            status = source_status.get(key, {})
+            if status and not status.get("success", False):
+                reason = status.get("reason") or "원인 미상"
+                st.warning(f"{label} 수집 실패: {reason}")
+
+        if not jd_result.get("success"):
+            reason = jd_result.get("error_reason") or "원인 미상"
+            st.warning(f"JD 수집 실패: {reason}")
 
     # 분석 결과 검토 UI
     ca = st.session_state.get("company_analysis")
@@ -317,6 +346,9 @@ def _render_company_job_editor(ca: dict, ja: dict) -> None:
             )
         else:
             st.info("JD 자동 수집에 실패했습니다. 직접 입력하거나 생략할 수 있습니다.")
+            jd_status = st.session_state.get("jd_collect_status") or {}
+            if jd_status and jd_status.get("reason"):
+                st.caption(f"실패 사유: {jd_status['reason']}")
             manual_jd = st.text_area(
                 "JD 수기 입력 (선택)",
                 height=150,
